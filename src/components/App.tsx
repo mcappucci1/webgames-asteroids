@@ -1,21 +1,14 @@
-import { Application, Graphics } from "pixi.js";
+import { GameRenderer } from "../pixi/GameRenderer";
 import "../styles/App.css";
 
 function createPixiApp() {
-	const pixiApp = new Application<HTMLCanvasElement>({
+	const renderer = new GameRenderer({
 		width: window.innerWidth,
 		height: window.innerHeight,
-		view: document.getElementById("#renderer") as HTMLCanvasElement,
 		backgroundAlpha: 0,
 	});
-	pixiApp.view.style.position = "absolute";
-	pixiApp.view.style.top = "0";
-	document.body.appendChild(pixiApp.view);
-	const graphic = new Graphics();
-	graphic.beginFill(0xffff00);
-	graphic.lineStyle(5, 0xffff00);
-	graphic.drawRect(0, 0, 100, 100);
-	pixiApp.stage.addChild(graphic);
+	renderer.style.position = "absolute";
+	renderer.style.top = "0";
 }
 
 export function App() {
