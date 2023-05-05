@@ -3,3 +3,8 @@
 	height: 100vh;
 	width: 100vw;
 }
+
+#play-game {
+	border: none;
+	margin-top: 200px;
+}

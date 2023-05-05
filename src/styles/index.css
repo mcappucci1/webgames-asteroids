@@ -9,6 +9,28 @@ body,
 	font-family: "Orbitron", sans-serif;
 }
 
+.animate-underline {
+	display: inline-block;
+	position: relative;
+}
+
+.animate-underline:after {
+	bottom: 0;
+	content: "";
+	display: block;
+	height: 2px;
+	left: 50%;
+	position: absolute;
+	background: #fff;
+	transition: width 0.3s ease 0s, left 0.3s ease 0s;
+	width: 0;
+}
+
+.animate-underline:hover:after {
+	width: 100%;
+	left: 0;
+}
+
 .test {
 	border: 1px solid red;
 }
