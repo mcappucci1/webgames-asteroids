@@ -61,22 +61,20 @@ export class GameRenderer {
 	playStartScreen() {
 		this.startScreenInterval = setInterval(() => {
 			const randForSize = Math.random() * 3;
+			const randForStyle = Math.random() * 3;
+
 			let size = Size.small;
 			if (randForSize > 2) size = Size.large;
 			else if (randForSize > 1) size = Size.medium;
 
-			const randForStyle = Math.random() * 3;
 			let style = Style.style1;
 			if (randForStyle > 2) style = Style.style2;
 			else if (randForStyle > 1) style = Style.style3;
 
 			const multiplier = Math.random();
 			const speed = 1.5 + multiplier ** 2 * 8.5;
-
 			const asteroid = new Asteroid(size, style, speed);
-
 			const { startPoint, theta } = this.getRandomStart(asteroid);
-
 			asteroid.setStartPoint(startPoint, theta);
 
 			this.app.stage.addChild(asteroid.sprite);
@@ -91,9 +89,24 @@ export class GameRenderer {
 	}
 
 	tick() {
-		for (const asteroid of this.asteroids) {
-			asteroid.sprite.x += asteroid.speed * Math.cos(asteroid.theta);
-			asteroid.sprite.y += asteroid.speed * Math.sin(asteroid.theta);
+		let i = 0;
+		while (i < this.asteroids.length) {
+			const { sprite, speed, theta } = this.asteroids[i];
+			sprite.x += speed * Math.cos(theta);
+			sprite.y += speed * Math.sin(theta);
+			const pastLeft =
+				sprite.x + sprite.width < 0 && Math.cos(theta) <= 0;
+			const pastRight =
+				sprite.x > window.innerWidth && Math.cos(theta) >= 0;
+			const pastBottom =
+				sprite.y + sprite.height < 0 && Math.sin(theta) <= 0;
+			const pastTop =
+				sprite.y > window.innerHeight && Math.sin(theta) >= 0;
+			if (pastLeft || pastRight || pastBottom || pastTop) {
+				this.asteroids.splice(i, 1);
+			} else {
+				++i;
+			}
 		}
 		requestAnimationFrame(() => this.tick());
 	}
