@@ -1,36 +1,59 @@
-import { Sprite, Spritesheet } from "pixi.js";
+import { IPointData } from "pixi.js";
+import { Entity } from "./Entity";
 
-export enum Size {
-	small = 3,
-	medium = 2,
-	large = 1,
-}
+const graphicPoints: Array<Array<IPointData>> = [
+	[
+		{ x: 29, y: 3 },
+		{ x: 51, y: 15 },
+		{ x: 82, y: 0 },
+		{ x: 105, y: 31 },
+		{ x: 81, y: 44 },
+		{ x: 105, y: 70 },
+		{ x: 78, y: 108 },
+		{ x: 41, y: 94 },
+		{ x: 27, y: 109 },
+		{ x: 0, y: 81 },
+		{ x: 14, y: 55 },
+		{ x: 1, y: 31 },
+	],
+	[
+		{ x: 28, y: 0 },
+		{ x: 65, y: 0 },
+		{ x: 104, y: 27 },
+		{ x: 103, y: 39 },
+		{ x: 73, y: 52 },
+		{ x: 107, y: 78 },
+		{ x: 82, y: 102 },
+		{ x: 64, y: 93 },
+		{ x: 24, y: 103 },
+		{ x: 0, y: 67 },
+		{ x: 3, y: 26 },
+		{ x: 43, y: 28 },
+	],
+	[
+		{ x: 40, y: 0 },
+		{ x: 81, y: 0 },
+		{ x: 108, y: 39 },
+		{ x: 108, y: 68 },
+		{ x: 78, y: 105 },
+		{ x: 57, y: 105 },
+		{ x: 57, y: 66 },
+		{ x: 29, y: 105 },
+		{ x: 0, y: 64 },
+		{ x: 28, y: 54 },
+		{ x: 3, y: 38 },
+	],
+];
 
-export enum Style {
-	style1 = "style1",
-	style2 = "style2",
-	style3 = "style3",
-}
-
-export class Asteroid {
-	static spriteSheet: Spritesheet;
-	size: Size;
-	style: Style;
-	speed: number;
-	theta: number = 0;
-	sprite: Sprite;
-
-	constructor(size: Size, style: Style, speed: number) {
-		this.size = size;
-		this.style = style;
-		this.speed = speed;
-		this.sprite = new Sprite(Asteroid.spriteSheet.textures[style]);
-		this.sprite.scale.set(1 / size);
+export class Asteroid extends Entity {
+	constructor(scale: number, style: number) {
+		super(graphicPoints[style]);
+		super.setScale(scale);
 	}
 
-	setStartPoint(startPoint: number[], theta: number) {
-		this.theta = theta;
-		this.sprite.x = startPoint[0];
-		this.sprite.y = startPoint[1];
+	static generateRandomAsteroid() {
+		const scale = Math.sqrt(1 / Math.pow(2, Math.floor(Math.random() * 3)));
+		const style = Math.floor(Math.random() * 3);
+		return new Asteroid(scale, style);
 	}
 }

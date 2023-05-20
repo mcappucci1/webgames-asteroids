@@ -1,0 +1,10 @@
+#game-board {
+	height: 100vh;
+	width: 100vw;
+	z-index: 100;
+}
+
+.ship-image {
+	height: 30px;
+	margin-right: 10px;
+}

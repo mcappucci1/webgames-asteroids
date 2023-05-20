@@ -1,0 +1,8 @@
+#start-game-panel {
+	z-index: 100;
+}
+
+#play-game {
+	border: none;
+	margin-top: 200px;
+}
