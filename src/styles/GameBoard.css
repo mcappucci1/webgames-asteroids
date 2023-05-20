@@ -5,6 +5,6 @@
 }
 
 .ship-image {
-	transform: rotate(-0.25turn);
 	height: 30px;
+	margin-right: 10px;
 }
