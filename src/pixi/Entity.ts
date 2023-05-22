@@ -59,12 +59,11 @@ export class Entity {
 	}
 
 	move(delta: number) {
-		this.graphic.x += this.velocity[0] * delta;
-		this.graphic.y += this.velocity[1] * delta;
+		this.setPosition(this.graphic.x + this.velocity[0] * delta, this.graphic.y + this.velocity[1] * delta);
 	}
 
 	rotateClockwiseBy(delta: number) {
-		this.graphic.rotation += delta;
+		this.setRotation(this.graphic.rotation + delta);
 	}
 
 	redraw(graphicData: Array<IPointData>) {

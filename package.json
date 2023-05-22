@@ -11,7 +11,6 @@
     "@types/react": "^18.2.5",
     "@types/react-dom": "^18.2.3",
     "bootstrap": "^5.2.3",
-    "detect-collisions": "^8.0.5",
     "pixi.js": "^7.2.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
