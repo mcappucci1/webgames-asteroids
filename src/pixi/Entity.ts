@@ -1,21 +1,93 @@
-import { Container, DisplayObject, Graphics, IPointData, ILineStyleOptions } from "pixi.js";
+import { Container, DisplayObject, Graphics, IPointData, ILineStyleOptions, Rectangle } from "pixi.js";
+import { segmentIntersection } from "@pixi/math-extras";
 
 const lineStyle: ILineStyleOptions = {
 	width: 4,
 	color: 0xc0ecff,
 };
 
+class CollisionBody extends Graphics {
+	data: Array<IPointData>;
+	red: boolean = false;
+
+	constructor(graphicData: Array<IPointData>) {
+		super();
+		this.lineStyle(lineStyle);
+		this.drawPolygon(graphicData);
+		this.pivot.set(this.width / 2, this.height / 2);
+		this.data = graphicData;
+	}
+
+	makeRed() {
+		if (this.red) return;
+		const { position, scale, rotation } = this;
+		this.clear();
+		this.lineStyle({ width: 4, color: 0xff0000 });
+		this.drawPolygon(this.data);
+		this.pivot.set(this.width / 2, this.height / 2);
+		this.position.set(position.x, position.y);
+		this.scale.set(scale.x);
+		this.rotation = rotation;
+		this.red = true;
+	}
+
+	makeNormal() {
+		if (!this.red) return;
+		const { position, scale, rotation } = this;
+		this.clear();
+		this.lineStyle(lineStyle);
+		this.drawPolygon(this.data);
+		this.pivot.set(this.width / 2, this.height / 2);
+		this.position.set(position.x, position.y);
+		this.scale.set(scale.x);
+		this.rotation = rotation;
+		this.red = false;
+	}
+
+	intersectsAABB(body: CollisionBody) {
+		const boundsA = this.getBounds();
+		const boundsB = body.getBounds();
+		return !(
+			boundsA.bottom < boundsB.top ||
+			boundsA.top > boundsB.bottom ||
+			boundsA.right < boundsB.left ||
+			boundsA.left > boundsB.right
+		);
+	}
+
+	intersectsShape(body: CollisionBody) {
+		const points1 = [];
+		const points2 = [];
+		for (let i = 0; i < this.vertexData.length; i += 2) {
+			points1.push({ x: this.vertexData[i], y: this.vertexData[i + 1] });
+		}
+		for (let i = 0; i < body.vertexData.length; i += 2) {
+			points2.push({ x: body.vertexData[i], y: body.vertexData[i + 1] });
+		}
+		for (let i = 0; i < points1.length; ++i) {
+			const start1 = points1[i];
+			const end1 = i === points1.length - 1 ? points1[0] : points1[i + 1];
+			for (let j = 0; j < points2.length; ++j) {
+				const start2 = points2[j];
+				const end2 = j === points2.length - 1 ? points2[0] : points2[j + 1];
+				const intersect = segmentIntersection(start1, end1, start2, end2);
+				if (intersect && !isNaN(intersect.x)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+}
+
 export class Entity {
 	static stage: Container<DisplayObject>;
 	protected theta: number = 0;
-	protected graphic: Graphics;
+	public graphic: CollisionBody;
 	protected velocity: number[] = [0, 0];
 
 	constructor(graphicData: Array<IPointData>) {
-		this.graphic = new Graphics();
-		this.graphic.lineStyle(lineStyle);
-		this.graphic.drawPolygon(graphicData);
-		this.graphic.pivot.set(this.graphic.width / 2, this.graphic.height / 2);
+		this.graphic = new CollisionBody(graphicData);
 		Entity.stage.addChild(this.graphic);
 	}
 
@@ -59,12 +131,11 @@ export class Entity {
 	}
 
 	move(delta: number) {
-		this.graphic.x += this.velocity[0] * delta;
-		this.graphic.y += this.velocity[1] * delta;
+		this.setPosition(this.graphic.x + this.velocity[0] * delta, this.graphic.y + this.velocity[1] * delta);
 	}
 
 	rotateClockwiseBy(delta: number) {
-		this.graphic.rotation += delta;
+		this.setRotation(this.graphic.rotation + delta);
 	}
 
 	redraw(graphicData: Array<IPointData>) {
@@ -76,5 +147,13 @@ export class Entity {
 	destroy() {
 		Entity.stage.removeChild(this.graphic);
 		this.graphic.destroy();
+	}
+
+	collision(body: Entity) {
+		if (!this.graphic.intersectsAABB(body.graphic)) {
+			return false;
+		}
+
+		return this.graphic.intersectsShape(body.graphic);
 	}
 }
