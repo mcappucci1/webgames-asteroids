@@ -128,6 +128,7 @@ export class Entity {
 
 	setRotation(rotation: number) {
 		this.graphic.rotation = rotation;
+		this.theta = rotation;
 	}
 
 	move(delta: number) {
@@ -150,10 +151,38 @@ export class Entity {
 	}
 
 	collision(body: Entity) {
-		if (!this.graphic.intersectsAABB(body.graphic)) {
-			return false;
-		}
+		return this.graphic.intersectsAABB(body.graphic) && this.graphic.intersectsShape(body.graphic);
+	}
 
-		return this.graphic.intersectsShape(body.graphic);
+	explode() {
+		const startTime = Date.now();
+		const numDots = 4;
+		const geoData = [
+			{ x: 0, y: 0 },
+			{ x: 1, y: 0 },
+			{ x: 1, y: 1 },
+			{ x: 0, y: 1 },
+		];
+		const points: Entity[] = [];
+		let angle = -Math.PI / 3;
+		for (let i = 0; i < numDots; ++i) {
+			const dot = new Entity(geoData);
+			dot.setPosition(this.graphic.x, this.graphic.y);
+			dot.setAngle(this.theta + angle);
+			dot.setVelocity(0.0001);
+			points.push(dot);
+			angle += (2 * Math.PI) / 9;
+		}
+		const update = (time: number) => {
+			if (Date.now() - startTime >= 2000) {
+				points.forEach((point) => point.destroy());
+				return;
+			}
+			points.forEach((point) => {
+				point.move(time);
+			});
+			requestAnimationFrame((time) => update(time));
+		};
+		requestAnimationFrame((time) => update(time));
 	}
 }
