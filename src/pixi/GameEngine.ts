@@ -153,6 +153,13 @@ export class GameEngine {
 			} else if (this.right && !this.left) {
 				this.ship.rotateClockwiseBy(0.1);
 			}
+			const smash = this.asteroids.reduce((acc, e) => acc || this.ship!.collision(e), false);
+			console.log(smash);
+			if (smash) {
+				this.ship.graphic.makeRed();
+			} else {
+				this.ship.graphic.makeNormal();
+			}
 		}
 		this.lastFrameTime = currentTime;
 		requestAnimationFrame((time) => this.tick(time));
