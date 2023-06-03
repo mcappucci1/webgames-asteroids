@@ -1,9 +1,12 @@
-import { useState } from "react";
 import "../styles/GameBoard.css";
 
-export const GameBoard = () => {
-	const [score, setScore] = useState(0);
-	const [lives, setLives] = useState(3);
+interface Props {
+	lives: number;
+	score: number;
+}
+
+export const GameBoard = ({ lives, score }: Props) => {
+	console.log(lives);
 	const lifeStrings = Array(lives).fill("/images/ship.png");
 	return (
 		<div id="game-board">
@@ -13,12 +16,7 @@ export const GameBoard = () => {
 				</div>
 				<div id="lives-container">
 					{lifeStrings.map((str, i) => (
-						<img
-							key={i}
-							src={str}
-							className="ship-image"
-							alt="life"
-						/>
+						<img key={i} src={str} className="ship-image" alt="life" />
 					))}
 				</div>
 			</div>

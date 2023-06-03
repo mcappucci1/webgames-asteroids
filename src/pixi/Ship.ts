@@ -27,6 +27,7 @@ export class Ship extends Entity {
 	static mass: number = 1000;
 	static engineForce: number = 1.5;
 	static dragCoefficient: number = 1;
+	indestructible: boolean = false;
 	private thrusting: boolean = false;
 	private direction: Direction;
 
@@ -98,5 +99,14 @@ export class Ship extends Entity {
 		} else if (bounds.top > window.innerHeight) {
 			this.graphic.y = -bounds.height / 4;
 		}
+	}
+
+	start() {
+		this.indestructible = true;
+		setTimeout(() => (this.indestructible = false), 500);
+		this.setPosition(window.innerWidth / 2, window.innerHeight);
+		this.setRotation((3 * Math.PI) / 2);
+		this.setAngle((3 * Math.PI) / 2);
+		this.setVelocity(0.5);
 	}
 }
