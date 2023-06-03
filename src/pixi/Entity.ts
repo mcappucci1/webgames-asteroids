@@ -1,4 +1,4 @@
-import { Container, DisplayObject, Graphics, IPointData, ILineStyleOptions, Rectangle } from "pixi.js";
+import { Container, DisplayObject, Graphics, IPointData, ILineStyleOptions } from "pixi.js";
 import { segmentIntersection } from "@pixi/math-extras";
 
 const lineStyle: ILineStyleOptions = {

@@ -29,29 +29,15 @@ export class GameEngine {
 
 	onKeydownEvent(e: KeyboardEvent) {
 		if (e.repeat) return;
-		if (e.key === "ArrowRight") {
-			this.right = true;
-		} else if (e.key === "ArrowLeft") {
-			this.left = true;
-		} else if (e.key === "ArrowUp") {
-			this.forward = true;
-			if (this.ship != null) {
-				this.ship.enableThrust();
-			}
+		if (this.ship) {
+			this.ship.onKeydownEvent(e.key);
 		}
 	}
 
 	onKeyupEvent(e: KeyboardEvent) {
 		if (e.repeat) return;
-		if (e.key === "ArrowRight") {
-			this.right = false;
-		} else if (e.key === "ArrowLeft") {
-			this.left = false;
-		} else if (e.key === "ArrowUp") {
-			this.forward = false;
-			if (this.ship != null) {
-				this.ship.disableThrust();
-			}
+		if (this.ship) {
+			this.ship.onKeyupEvent(e.key);
 		}
 	}
 
@@ -148,18 +134,7 @@ export class GameEngine {
 		}
 		if (this.ship) {
 			this.ship.move(delta);
-			if (this.left && !this.right) {
-				this.ship.rotateClockwiseBy(-0.1);
-			} else if (this.right && !this.left) {
-				this.ship.rotateClockwiseBy(0.1);
-			}
 			const smash = this.asteroids.reduce((acc, e) => acc || this.ship!.collision(e), false);
-			console.log(smash);
-			if (smash) {
-				this.ship.graphic.makeRed();
-			} else {
-				this.ship.graphic.makeNormal();
-			}
 		}
 		this.lastFrameTime = currentTime;
 		requestAnimationFrame((time) => this.tick(time));
