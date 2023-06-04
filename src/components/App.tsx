@@ -39,7 +39,7 @@ export function App() {
 	}, [updateLives, setScore]);
 	return (
 		<div id="background" className="d-flex text-white justify-content-center align-items-center">
-			{gameState === 0 ? <StartGamePanel startGame={startGame} /> : <GameBoard lives={lives} score={0} />}
+			{gameState === 0 ? <StartGamePanel startGame={startGame} /> : <GameBoard lives={lives} score={score} />}
 		</div>
 	);
 }

@@ -18,32 +18,6 @@ class CollisionBody extends Graphics {
 		this.data = graphicData;
 	}
 
-	makeRed() {
-		if (this.red) return;
-		const { position, scale, rotation } = this;
-		this.clear();
-		this.lineStyle({ width: 4, color: 0xff0000 });
-		this.drawPolygon(this.data);
-		this.pivot.set(this.width / 2, this.height / 2);
-		this.position.set(position.x, position.y);
-		this.scale.set(scale.x);
-		this.rotation = rotation;
-		this.red = true;
-	}
-
-	makeNormal() {
-		if (!this.red) return;
-		const { position, scale, rotation } = this;
-		this.clear();
-		this.lineStyle(lineStyle);
-		this.drawPolygon(this.data);
-		this.pivot.set(this.width / 2, this.height / 2);
-		this.position.set(position.x, position.y);
-		this.scale.set(scale.x);
-		this.rotation = rotation;
-		this.red = false;
-	}
-
 	intersectsAABB(body: CollisionBody) {
 		const boundsA = this.getBounds();
 		const boundsB = body.getBounds();
@@ -169,18 +143,25 @@ export class Entity {
 			const dot = new Entity(geoData);
 			dot.setPosition(this.graphic.x, this.graphic.y);
 			dot.setAngle(this.theta + angle);
-			dot.setVelocity(0.0001);
+			dot.setVelocity(0.05);
 			points.push(dot);
 			angle += (2 * Math.PI) / 9;
 		}
+		let lastTime: number | undefined;
 		const update = (time: number) => {
+			if (lastTime == null) {
+				lastTime = time;
+				requestAnimationFrame((time) => update(time));
+				return;
+			}
 			if (Date.now() - startTime >= 2000) {
 				points.forEach((point) => point.destroy());
 				return;
 			}
 			points.forEach((point) => {
-				point.move(time);
+				point.move(time - lastTime!);
 			});
+			lastTime = time;
 			requestAnimationFrame((time) => update(time));
 		};
 		requestAnimationFrame((time) => update(time));

@@ -1,5 +1,6 @@
 import { IPointData } from "pixi.js";
 import { Entity } from "./Entity";
+import { GameEngine } from "./GameEngine";
 
 const ship: Array<IPointData> = [
 	{ x: 0, y: 0 },
@@ -24,16 +25,16 @@ enum Direction {
 }
 
 export class Ship extends Entity {
-	static mass: number = 1000;
+	static mass: number = 2000;
 	static engineForce: number = 1.5;
 	static dragCoefficient: number = 1;
 	indestructible: boolean = false;
 	private thrusting: boolean = false;
-	private direction: Direction;
+	private direction: Direction = Direction.None;
+	private shootInterval: NodeJS.Timer | undefined;
 
 	constructor() {
 		super(ship);
-		this.direction = Direction.None;
 	}
 
 	onKeydownEvent(key: string) {
@@ -43,6 +44,8 @@ export class Ship extends Entity {
 			this.direction = this.direction === Direction.Right ? Direction.Both : Direction.Left;
 		} else if (key === "ArrowUp") {
 			this.enableThrust();
+		} else if (key === "s") {
+			this.startShoot();
 		}
 	}
 
@@ -53,7 +56,36 @@ export class Ship extends Entity {
 			this.direction = this.direction === Direction.Both ? Direction.Right : Direction.None;
 		} else if (key === "ArrowUp") {
 			this.disableThrust();
+		} else if (key === "s") {
+			this.endShoot();
 		}
+	}
+
+	createShot() {
+		const geoData = [
+			{ x: 0, y: 0 },
+			{ x: 5, y: 0 },
+			{ x: 5, y: 5 },
+			{ x: 0, y: 5 },
+		];
+		const shot = new Entity(geoData);
+		shot.setAngle(this.theta);
+		shot.setVelocity(0.75);
+		shot.setPosition(this.graphic.x, this.graphic.y);
+		GameEngine.shots.push(shot);
+	}
+
+	startShoot() {
+		if (this.shootInterval) clearInterval(this.shootInterval);
+		this.createShot();
+		this.shootInterval = setInterval(() => {
+			this.createShot();
+		}, 300);
+	}
+
+	endShoot() {
+		if (this.shootInterval) clearInterval(this.shootInterval);
+		this.shootInterval = undefined;
 	}
 
 	thrust(delta: number) {
@@ -74,9 +106,9 @@ export class Ship extends Entity {
 
 	move(delta: number) {
 		if (this.direction === Direction.Left) {
-			this.rotateClockwiseBy(-0.1);
+			this.rotateClockwiseBy(-0.075);
 		} else if (this.direction === Direction.Right) {
-			this.rotateClockwiseBy(0.1);
+			this.rotateClockwiseBy(0.075);
 		}
 		if (this.thrusting) {
 			const forwardAcceleration = Ship.engineForce / Ship.mass;
@@ -103,10 +135,15 @@ export class Ship extends Entity {
 
 	start() {
 		this.indestructible = true;
-		setTimeout(() => (this.indestructible = false), 500);
+		setTimeout(() => (this.indestructible = false), 1000);
 		this.setPosition(window.innerWidth / 2, window.innerHeight);
 		this.setRotation((3 * Math.PI) / 2);
 		this.setAngle((3 * Math.PI) / 2);
-		this.setVelocity(0.5);
+		this.setVelocity(0.25);
+	}
+
+	destroy(): void {
+		if (this.shootInterval) clearInterval(this.shootInterval);
+		super.destroy();
 	}
 }

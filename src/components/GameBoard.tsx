@@ -6,7 +6,6 @@ interface Props {
 }
 
 export const GameBoard = ({ lives, score }: Props) => {
-	console.log(lives);
 	const lifeStrings = Array(lives).fill("/images/ship.png");
 	return (
 		<div id="game-board">
