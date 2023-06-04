@@ -169,18 +169,25 @@ export class Entity {
 			const dot = new Entity(geoData);
 			dot.setPosition(this.graphic.x, this.graphic.y);
 			dot.setAngle(this.theta + angle);
-			dot.setVelocity(0.0001);
+			dot.setVelocity(0.05);
 			points.push(dot);
 			angle += (2 * Math.PI) / 9;
 		}
+		let lastTime: number | undefined;
 		const update = (time: number) => {
+			if (lastTime == null) {
+				lastTime = time;
+				requestAnimationFrame((time) => update(time));
+				return;
+			}
 			if (Date.now() - startTime >= 2000) {
 				points.forEach((point) => point.destroy());
 				return;
 			}
 			points.forEach((point) => {
-				point.move(time);
+				point.move(time - lastTime!);
 			});
+			lastTime = time;
 			requestAnimationFrame((time) => update(time));
 		};
 		requestAnimationFrame((time) => update(time));

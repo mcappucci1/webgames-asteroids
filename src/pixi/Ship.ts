@@ -1,5 +1,6 @@
 import { IPointData } from "pixi.js";
 import { Entity } from "./Entity";
+import { GameEngine } from "./GameEngine";
 
 const ship: Array<IPointData> = [
 	{ x: 0, y: 0 },
@@ -29,11 +30,11 @@ export class Ship extends Entity {
 	static dragCoefficient: number = 1;
 	indestructible: boolean = false;
 	private thrusting: boolean = false;
-	private direction: Direction;
+	private direction: Direction = Direction.None;
+	private shootInterval: NodeJS.Timer | undefined;
 
 	constructor() {
 		super(ship);
-		this.direction = Direction.None;
 	}
 
 	onKeydownEvent(key: string) {
@@ -43,6 +44,8 @@ export class Ship extends Entity {
 			this.direction = this.direction === Direction.Right ? Direction.Both : Direction.Left;
 		} else if (key === "ArrowUp") {
 			this.enableThrust();
+		} else if (key === "s") {
+			this.startShoot();
 		}
 	}
 
@@ -53,7 +56,36 @@ export class Ship extends Entity {
 			this.direction = this.direction === Direction.Both ? Direction.Right : Direction.None;
 		} else if (key === "ArrowUp") {
 			this.disableThrust();
+		} else if (key === "s") {
+			this.endShoot();
 		}
+	}
+
+	createShot() {
+		const geoData = [
+			{ x: 0, y: 0 },
+			{ x: 4, y: 0 },
+			{ x: 4, y: 4 },
+			{ x: 0, y: 4 },
+		];
+		const shot = new Entity(geoData);
+		shot.setAngle(this.theta);
+		shot.setVelocity(0.5);
+		shot.setPosition(this.graphic.x, this.graphic.y);
+		GameEngine.shots.push(shot);
+	}
+
+	startShoot() {
+		if (this.shootInterval) clearInterval(this.shootInterval);
+		this.createShot();
+		this.shootInterval = setInterval(() => {
+			this.createShot();
+		}, 300);
+	}
+
+	endShoot() {
+		if (this.shootInterval) clearInterval(this.shootInterval);
+		this.shootInterval = undefined;
 	}
 
 	thrust(delta: number) {
@@ -108,5 +140,10 @@ export class Ship extends Entity {
 		this.setRotation((3 * Math.PI) / 2);
 		this.setAngle((3 * Math.PI) / 2);
 		this.setVelocity(0.5);
+	}
+
+	destroy(): void {
+		if (this.shootInterval) clearInterval(this.shootInterval);
+		super.destroy();
 	}
 }

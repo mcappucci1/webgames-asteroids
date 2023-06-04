@@ -46,14 +46,33 @@ const graphicPoints: Array<Array<IPointData>> = [
 ];
 
 export class Asteroid extends Entity {
+	private style: number;
+
 	constructor(scale: number, style: number) {
 		super(graphicPoints[style]);
 		super.setScale(scale);
+		this.style = style;
 	}
 
 	static generateRandomAsteroid() {
 		const scale = Math.sqrt(1 / Math.pow(2, Math.floor(Math.random() * 3)));
 		const style = Math.floor(Math.random() * 3);
+		console.log(scale);
 		return new Asteroid(scale, style);
+	}
+
+	split() {
+		if (this.graphic.scale.x === 0.5) {
+			return [];
+		}
+		const newScale = Math.sqrt(this.graphic.scale.x ** 2 / 2);
+		const splitAngle = 0.02 + (Math.random() * Math.PI) / 3;
+		const asteroids = [new Asteroid(newScale, this.style), new Asteroid(newScale, this.style)];
+		asteroids.forEach((asteroid, i) => {
+			asteroid.setVelocity(this.getNormalizedVelocity());
+			asteroid.setAngle(this.theta + splitAngle * (i === 1 ? -1 : 1));
+			asteroid.setPosition(this.graphic.x, this.graphic.y);
+		});
+		return asteroids;
 	}
 }

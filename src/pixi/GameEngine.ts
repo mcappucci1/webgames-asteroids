@@ -4,6 +4,7 @@ import { Entity } from "./Entity";
 import { Ship } from "./Ship";
 
 export class GameEngine {
+	static shots: Entity[] = [];
 	app: Application<HTMLCanvasElement>;
 	style: CSSStyleDeclaration;
 	lives: number = 3;
@@ -107,7 +108,7 @@ export class GameEngine {
 			asteroid.setAngle(theta);
 			asteroid.setVelocity(0.03 + Math.random() ** 2 * 0.35);
 			this.asteroids.push(asteroid);
-		}, 100);
+		}, 1000);
 	}
 
 	resetGame() {
@@ -121,10 +122,7 @@ export class GameEngine {
 		this.ship = null;
 		if (this.startScreenInterval) clearInterval(this.startScreenInterval);
 		if (this.playGameInterval) clearInterval(this.playGameInterval);
-		if (this.launchShipTimeout) {
-			console.log("clearing timeout");
-			clearTimeout(this.launchShipTimeout);
-		}
+		if (this.launchShipTimeout) clearTimeout(this.launchShipTimeout);
 		this.startScreenInterval = undefined;
 		this.playGameInterval = undefined;
 		this.launchShipTimeout = undefined;
@@ -157,6 +155,32 @@ export class GameEngine {
 				this.asteroids.splice(i, 1);
 			} else {
 				++i;
+			}
+		}
+		GameEngine.shots.forEach((shot) => {
+			shot.move(delta);
+		});
+		let x = 0;
+		while (x < this.asteroids.length) {
+			let destroy = false;
+			let j = 0;
+			while (j < GameEngine.shots.length) {
+				if (this.asteroids[x].collision(GameEngine.shots[j])) {
+					destroy = true;
+					break;
+				}
+				++j;
+			}
+			if (destroy) {
+				const newAsteroids = this.asteroids[x].split();
+				this.asteroids.push(...newAsteroids);
+				this.asteroids[x].explode();
+				this.asteroids[x].destroy();
+				this.asteroids.splice(x, 1);
+				GameEngine.shots[j].destroy();
+				GameEngine.shots.splice(j, 1);
+			} else {
+				++x;
 			}
 		}
 		if (this.ship) {
