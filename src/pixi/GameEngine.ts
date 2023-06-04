@@ -17,6 +17,8 @@ export class GameEngine {
 	private lastFrameTime: number | null = null;
 	private livesChangedCB: Function | null = null;
 	private scoreChangedCB: Function | null = null;
+	private generateAsteroidInterval: number = 1000;
+	private lowerTimeInterval: number = 10_000;
 
 	constructor(options: Partial<IApplicationOptions>) {
 		this.app = new Application<HTMLCanvasElement>(options);
@@ -91,6 +93,24 @@ export class GameEngine {
 		}, 200);
 	}
 
+	startGameInterval() {
+		let numSecs = 0;
+		this.playGameInterval = setInterval(() => {
+			numSecs += this.generateAsteroidInterval;
+			const asteroid = Asteroid.generateRandomAsteroid();
+			const { startPoint, theta } = this.getRandomStart(asteroid);
+			asteroid.setPosition(startPoint[0], startPoint[1]);
+			asteroid.setAngle(theta);
+			asteroid.setVelocity(0.03 + Math.random() ** 2 * 0.35);
+			this.asteroids.push(asteroid);
+			if (numSecs >= this.lowerTimeInterval && this.generateAsteroidInterval > 300) {
+				this.generateAsteroidInterval -= 50;
+				clearInterval(this.playGameInterval);
+				this.startGameInterval();
+			}
+		}, this.generateAsteroidInterval);
+	}
+
 	playGame() {
 		if (this.startScreenInterval) {
 			clearInterval(this.startScreenInterval);
@@ -101,14 +121,7 @@ export class GameEngine {
 		this.asteroids = [];
 		this.ship = new Ship();
 		this.ship.start();
-		this.playGameInterval = setInterval(() => {
-			const asteroid = Asteroid.generateRandomAsteroid();
-			const { startPoint, theta } = this.getRandomStart(asteroid);
-			asteroid.setPosition(startPoint[0], startPoint[1]);
-			asteroid.setAngle(theta);
-			asteroid.setVelocity(0.03 + Math.random() ** 2 * 0.35);
-			this.asteroids.push(asteroid);
-		}, 1000);
+		this.startGameInterval();
 	}
 
 	resetGame() {
@@ -172,6 +185,8 @@ export class GameEngine {
 				++j;
 			}
 			if (destroy) {
+				this.score += this.asteroids[x].getScore();
+				if (this.scoreChangedCB) this.scoreChangedCB(this.score);
 				const newAsteroids = this.asteroids[x].split();
 				this.asteroids.push(...newAsteroids);
 				this.asteroids[x].explode();
@@ -191,7 +206,10 @@ export class GameEngine {
 				this.ship.explode();
 				this.ship.destroy();
 				this.ship = null;
+				clearInterval(this.playGameInterval);
+				this.generateAsteroidInterval = 1000;
 				this.launchShipTimeout = setTimeout(() => {
+					this.startGameInterval();
 					this.ship = new Ship();
 					this.ship.start();
 					this.launchShipTimeout = undefined;

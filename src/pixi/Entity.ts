@@ -18,32 +18,6 @@ class CollisionBody extends Graphics {
 		this.data = graphicData;
 	}
 
-	makeRed() {
-		if (this.red) return;
-		const { position, scale, rotation } = this;
-		this.clear();
-		this.lineStyle({ width: 4, color: 0xff0000 });
-		this.drawPolygon(this.data);
-		this.pivot.set(this.width / 2, this.height / 2);
-		this.position.set(position.x, position.y);
-		this.scale.set(scale.x);
-		this.rotation = rotation;
-		this.red = true;
-	}
-
-	makeNormal() {
-		if (!this.red) return;
-		const { position, scale, rotation } = this;
-		this.clear();
-		this.lineStyle(lineStyle);
-		this.drawPolygon(this.data);
-		this.pivot.set(this.width / 2, this.height / 2);
-		this.position.set(position.x, position.y);
-		this.scale.set(scale.x);
-		this.rotation = rotation;
-		this.red = false;
-	}
-
 	intersectsAABB(body: CollisionBody) {
 		const boundsA = this.getBounds();
 		const boundsB = body.getBounds();

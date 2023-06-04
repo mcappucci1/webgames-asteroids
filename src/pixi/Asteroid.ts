@@ -57,7 +57,6 @@ export class Asteroid extends Entity {
 	static generateRandomAsteroid() {
 		const scale = Math.sqrt(1 / Math.pow(2, Math.floor(Math.random() * 3)));
 		const style = Math.floor(Math.random() * 3);
-		console.log(scale);
 		return new Asteroid(scale, style);
 	}
 
@@ -74,5 +73,9 @@ export class Asteroid extends Entity {
 			asteroid.setPosition(this.graphic.x, this.graphic.y);
 		});
 		return asteroids;
+	}
+
+	getScore() {
+		return Math.round(this.graphic.scale.x ** 2 * 100);
 	}
 }
