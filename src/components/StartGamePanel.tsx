@@ -13,7 +13,7 @@ export const StartGamePanel = ({ startGame }: StartGameProps) => {
 				<div className="">
 					<div className="row mb-5">
 						<div className="col-12 text-center">
-							<h1 className="display-1">Asteroids</h1>
+							<h1 className="display-1">Hi Donald</h1>
 						</div>
 					</div>
 					<div className="d-flex justify-content-center">
