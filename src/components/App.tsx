@@ -4,12 +4,7 @@ import { GameBoard } from "./GameBoard";
 import { useState, useEffect, useCallback } from "react";
 import "../styles/App.css";
 
-const renderer = new GameEngine({
-	width: window.innerWidth,
-	height: window.innerHeight,
-	backgroundAlpha: 0,
-	antialias: true,
-});
+const renderer = new GameEngine();
 renderer.style.position = "absolute";
 renderer.style.top = "0";
 
@@ -38,7 +33,7 @@ export function App() {
 		renderer.setScoreChangedCB(setScore);
 	}, [updateLives, setScore]);
 	return (
-		<div id="background" className="d-flex text-white justify-content-center align-items-center">
+		<div id="background" className="d-flex text-white">
 			{gameState === 0 ? <StartGamePanel startGame={startGame} /> : <GameBoard lives={lives} score={score} />}
 		</div>
 	);

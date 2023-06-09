@@ -1,4 +1,4 @@
-import { Application, IApplicationOptions } from "pixi.js";
+import { Application } from "pixi.js";
 import { Asteroid } from "./Asteroid";
 import { Entity } from "./Entity";
 import { Ship } from "./Ship";
@@ -23,8 +23,14 @@ export class GameEngine {
 	private lowerTimeInterval: number = 10_000;
 	private alienShips: AlienShip[] = [];
 
-	constructor(options: Partial<IApplicationOptions>) {
-		this.app = new Application<HTMLCanvasElement>(options);
+	constructor() {
+		this.app = new Application<HTMLCanvasElement>({
+			width: window.innerWidth,
+			height: window.innerHeight,
+			backgroundAlpha: 0,
+			antialias: true,
+			resizeTo: window,
+		});
 		Entity.stage = this.app.stage;
 		this.style = this.app.view.style;
 		this.asteroids = [];

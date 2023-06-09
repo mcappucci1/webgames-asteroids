@@ -2,7 +2,25 @@
 	z-index: 100;
 }
 
+.key-container {
+	border: 2px solid white;
+	border-radius: 10px;
+	width: 45px;
+	height: 45px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.key-text {
+	font-weight: bold;
+	font-size: larger;
+}
+
 #play-game {
 	border: none;
-	margin-top: 200px;
+}
+
+#gap {
+	margin-top: 100px;
 }
