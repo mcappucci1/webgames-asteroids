@@ -142,6 +142,12 @@ export class GameEngine {
 		if (this.scoreChangedCB) this.scoreChangedCB(this.score);
 		this.asteroids.forEach((asteroid) => asteroid.destroy());
 		this.asteroids = [];
+		this.alienShips.forEach((alienShip) => alienShip.destroy());
+		this.alienShips = [];
+		GameEngine.alienShots.forEach((alienShot) => alienShot.destroy());
+		GameEngine.alienShots = [];
+		GameEngine.shots.forEach((shot) => shot.destroy());
+		GameEngine.shots = [];
 		this.ship?.destroy();
 		this.ship = null;
 		if (this.startScreenInterval) clearInterval(this.startScreenInterval);
@@ -163,6 +169,56 @@ export class GameEngine {
 		return pastLeft || pastRight || pastBottom || pastTop;
 	}
 
+	moveEntityArray(arr: Entity[], delta: number) {
+		let i = 0;
+		while (i < arr.length) {
+			const entity = arr[i];
+			entity.move(delta);
+			if (this.entityOutOfBounds(entity)) {
+				entity.destroy();
+				arr.splice(i, 1);
+			} else {
+				++i;
+			}
+		}
+	}
+
+	destroyEntity(arr: Entity[], i: number, addScore: boolean) {
+		if (addScore) this.score += arr[i].getScore();
+		if (this.scoreChangedCB) this.scoreChangedCB(this.score);
+		if (arr[i] instanceof Asteroid) {
+			const newAsteroids = (arr[i] as Asteroid).split();
+			arr.push(...newAsteroids);
+		}
+		arr[i].explode();
+		arr[i].destroy();
+		arr.splice(i, 1);
+	}
+
+	detectCollisionsForEntityArray(targetArray: Entity[], collisionObjects: Entity[][]) {
+		let i = 0;
+		while (i < targetArray.length) {
+			let destroy = false;
+			for (const entityArr of collisionObjects) {
+				let j = 0;
+				while (j < entityArr.length) {
+					if (targetArray[i].collision(entityArr[j])) {
+						destroy = true;
+						this.destroyEntity(entityArr, j, true);
+						break;
+					}
+					++j;
+				}
+				if (destroy) break;
+			}
+			if (destroy) {
+				this.destroyEntity(targetArray, i, true);
+			} else {
+				++i;
+			}
+		}
+	}
+
 	tick(currentTime: number) {
 		if (this.lastFrameTime == null) {
 			this.lastFrameTime = currentTime;
@@ -170,137 +226,18 @@ export class GameEngine {
 			return;
 		}
 		const delta = currentTime - this.lastFrameTime;
-		let i = 0;
-		while (i < this.asteroids.length) {
-			const asteroid = this.asteroids[i];
-			asteroid.move(delta);
-			if (this.entityOutOfBounds(asteroid)) {
-				asteroid.destroy();
-				this.asteroids.splice(i, 1);
-			} else {
-				++i;
-			}
-		}
-		i = 0;
-		while (i < this.alienShips.length) {
-			const alienShip = this.alienShips[i];
-			alienShip.move(delta);
-			if (this.entityOutOfBounds(alienShip)) {
-				alienShip.destroy();
-				this.alienShips.splice(i, 1);
-			} else {
-				++i;
-			}
-		}
-		GameEngine.shots.forEach((shot) => {
-			shot.move(delta);
-		});
-		GameEngine.alienShots.forEach((shot) => {
-			shot.move(delta);
-		});
-		let x = 0;
-		while (x < this.asteroids.length) {
-			let destroy = false;
-			let j = 0;
-			while (j < GameEngine.shots.length) {
-				if (this.asteroids[x].collision(GameEngine.shots[j])) {
-					destroy = true;
-					break;
-				}
-				++j;
-			}
-			if (destroy) {
-				this.score += this.asteroids[x].getScore();
-				if (this.scoreChangedCB) this.scoreChangedCB(this.score);
-				const newAsteroids = this.asteroids[x].split();
-				this.asteroids.push(...newAsteroids);
-				this.asteroids[x].explode();
-				this.asteroids[x].destroy();
-				this.asteroids.splice(x, 1);
-				GameEngine.shots[j].destroy();
-				GameEngine.shots.splice(j, 1);
-			} else {
-				j = 0;
-				while (j < GameEngine.alienShots.length) {
-					if (this.asteroids[x].collision(GameEngine.alienShots[j])) {
-						destroy = true;
-						break;
-					}
-					++j;
-				}
-				if (destroy) {
-					const newAsteroids = this.asteroids[x].split();
-					this.asteroids.push(...newAsteroids);
-					this.asteroids[x].explode();
-					this.asteroids[x].destroy();
-					this.asteroids.splice(x, 1);
-					GameEngine.alienShots[j].destroy();
-					GameEngine.alienShots.splice(j, 1);
-				} else {
-					++x;
-				}
-			}
-		}
-		x = 0;
-		while (x < this.alienShips.length) {
-			let destroy = false;
-			let j = 0;
-			while (j < GameEngine.shots.length) {
-				if (this.alienShips[x].collision(GameEngine.shots[j])) {
-					destroy = true;
-					break;
-				}
-				++j;
-			}
-			if (destroy) {
-				this.score += this.alienShips[x].getScore();
-				if (this.scoreChangedCB) this.scoreChangedCB(this.score);
-				this.alienShips[x].explode();
-				this.alienShips[x].destroy();
-				this.alienShips.splice(x, 1);
-				GameEngine.shots[j].destroy();
-				GameEngine.shots.splice(j, 1);
-			} else {
-				++x;
-			}
-		}
+		this.moveEntityArray(this.asteroids, delta);
+		this.moveEntityArray(this.alienShips, delta);
+		this.moveEntityArray(GameEngine.shots, delta);
+		this.moveEntityArray(GameEngine.alienShots, delta);
+		this.detectCollisionsForEntityArray(this.asteroids, [GameEngine.shots, GameEngine.alienShots]);
+		this.detectCollisionsForEntityArray(this.alienShips, [GameEngine.shots]);
 		if (this.ship) {
 			this.ship.move(delta);
 			if (!this.ship.indestructible) {
-				let smash = false;
-				for (let x = 0; x < this.asteroids.length && !smash; ++x) {
-					if (this.ship!.collision(this.asteroids[x])) {
-						this.score += this.asteroids[x].getScore();
-						if (this.scoreChangedCB) this.scoreChangedCB(this.score);
-						const newAsteroids = this.asteroids[x].split();
-						this.asteroids.push(...newAsteroids);
-						this.asteroids[x].explode();
-						this.asteroids[x].destroy();
-						this.asteroids.splice(x, 1);
-						smash = true;
-					}
-				}
-				for (let x = 0; x < this.alienShips.length && !smash; ++x) {
-					if (this.ship!.collision(this.alienShips[x])) {
-						this.score += this.alienShips[x].getScore();
-						if (this.scoreChangedCB) this.scoreChangedCB(this.score);
-						this.alienShips[x].explode();
-						this.alienShips[x].destroy();
-						this.alienShips.splice(x, 1);
-						smash = true;
-						break;
-					}
-				}
-				for (let x = 0; x < GameEngine.alienShots.length && !smash; ++x) {
-					if (this.ship!.collision(GameEngine.alienShots[x])) {
-						GameEngine.alienShots.splice(x, 1);
-						smash = true;
-						break;
-					}
-				}
-				if (smash) {
-					this.ship.explode();
-					this.ship.destroy();
+				const shipArr = [this.ship];
+				this.detectCollisionsForEntityArray(shipArr, [this.asteroids, this.alienShips, GameEngine.alienShots]);
+				if (shipArr.length === 0) {
 					this.ship = null;
 					clearInterval(this.playGameInterval);
 					this.generateAsteroidInterval = 1000;

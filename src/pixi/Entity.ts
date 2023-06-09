@@ -7,15 +7,16 @@ const lineStyle: ILineStyleOptions = {
 };
 
 class CollisionBody extends Graphics {
-	data: Array<IPointData>;
-	red: boolean = false;
+	protected data: Array<IPointData>;
+	protected treatAsPoint: boolean;
 
-	constructor(graphicData: Array<IPointData>) {
+	constructor(graphicData: Array<IPointData>, treatAsPoint?: boolean) {
 		super();
 		this.lineStyle(lineStyle);
 		this.drawPolygon(graphicData);
 		this.pivot.set(this.width / 2, this.height / 2);
 		this.data = graphicData;
+		this.treatAsPoint = treatAsPoint === undefined ? false : treatAsPoint;
 	}
 
 	intersectsAABB(body: CollisionBody) {
@@ -30,6 +31,7 @@ class CollisionBody extends Graphics {
 	}
 
 	intersectsShape(body: CollisionBody) {
+		if (!this.vertexData || !body.vertexData) return false;
 		const points1 = [];
 		const points2 = [];
 		for (let i = 0; i < this.vertexData.length; i += 2) {
@@ -50,6 +52,9 @@ class CollisionBody extends Graphics {
 				}
 			}
 		}
+		if (body.treatAsPoint) {
+			return this.containsPoint(body.position);
+		}
 		return false;
 	}
 }
@@ -59,10 +64,13 @@ export class Entity {
 	protected theta: number = 0;
 	public graphic: CollisionBody;
 	protected velocity: number[] = [0, 0];
+	protected score: number = 0;
+	protected explosive: boolean;
 
-	constructor(graphicData: Array<IPointData>) {
-		this.graphic = new CollisionBody(graphicData);
+	constructor(graphicData: Array<IPointData>, explosive?: boolean, treatAsPoint?: boolean) {
+		this.graphic = new CollisionBody(graphicData, treatAsPoint);
 		Entity.stage.addChild(this.graphic);
+		this.explosive = explosive === undefined ? true : explosive;
 	}
 
 	getNormalizedVelocity() {
@@ -129,6 +137,7 @@ export class Entity {
 	}
 
 	explode() {
+		if (!this.explosive) return;
 		const startTime = Date.now();
 		const numDots = 4;
 		const geoData = [
@@ -165,5 +174,9 @@ export class Entity {
 			requestAnimationFrame((time) => update(time));
 		};
 		requestAnimationFrame((time) => update(time));
+	}
+
+	getScore() {
+		return this.score;
 	}
 }
