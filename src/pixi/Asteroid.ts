@@ -52,6 +52,7 @@ export class Asteroid extends Entity {
 		super(graphicPoints[style]);
 		super.setScale(scale);
 		this.style = style;
+		this.score = Math.round(scale ** 2 * 100);
 	}
 
 	static generateRandomAsteroid() {
@@ -73,9 +74,5 @@ export class Asteroid extends Entity {
 			asteroid.setPosition(this.graphic.x, this.graphic.y);
 		});
 		return asteroids;
-	}
-
-	getScore() {
-		return Math.round(this.graphic.scale.x ** 2 * 100);
 	}
 }

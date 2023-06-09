@@ -1,5 +1,6 @@
 import { IPointData } from "pixi.js";
 import { Entity } from "./Entity";
+import { Shot } from "./Shot";
 import { GameEngine } from "./GameEngine";
 
 const ship: Array<IPointData> = [
@@ -62,13 +63,7 @@ export class Ship extends Entity {
 	}
 
 	createShot() {
-		const geoData = [
-			{ x: 0, y: 0 },
-			{ x: 5, y: 0 },
-			{ x: 5, y: 5 },
-			{ x: 0, y: 5 },
-		];
-		const shot = new Entity(geoData);
+		const shot = new Shot();
 		shot.setAngle(this.theta);
 		shot.setVelocity(0.75);
 		shot.setPosition(this.graphic.x, this.graphic.y);
