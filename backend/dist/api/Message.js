@@ -1,0 +1,18 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MessageType = exports.Message = void 0;
+class Message {
+    constructor(msgType, data) {
+        this.msgType = msgType;
+        this.data = data;
+    }
+}
+exports.Message = Message;
+var MessageType;
+(function (MessageType) {
+    MessageType[MessageType["CREATE_CLIENT"] = 0] = "CREATE_CLIENT";
+    MessageType[MessageType["SET_CLIENT_NAME"] = 1] = "SET_CLIENT_NAME";
+    MessageType[MessageType["CREATE_GAME"] = 2] = "CREATE_GAME";
+    MessageType[MessageType["ADD_CLIENT_TO_GAME"] = 3] = "ADD_CLIENT_TO_GAME";
+    MessageType[MessageType["START_GAME"] = 4] = "START_GAME";
+})(MessageType || (exports.MessageType = MessageType = {}));

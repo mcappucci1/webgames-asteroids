@@ -1,0 +1,16 @@
+{
+	"name": "backend",
+	"version": "1.0.0",
+	"description": "",
+	"main": "main.js",
+	"scripts": {
+		"test": "npx tsc && node ./dist/main.js"
+	},
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"@types/npm": "^7.19.3",
+		"@types/ws": "^8.5.10",
+		"typescript": "^5.3.2"
+	}
+}
