@@ -31,7 +31,6 @@ export class GameEngine {
 			antialias: true,
 			resizeTo: window,
 		});
-		Entity.stage = this.app.stage;
 		this.style = this.app.view.style;
 		this.asteroids = [];
 		document.body.appendChild(this.app.view);

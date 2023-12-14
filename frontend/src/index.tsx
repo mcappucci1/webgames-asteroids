@@ -3,6 +3,4 @@ import { App } from "./components/App";
 import "bootstrap/dist/css/bootstrap.css";
 import "./styles/index.css";
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-	<App />
-);
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(<App />);

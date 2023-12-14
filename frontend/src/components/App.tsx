@@ -1,40 +1,30 @@
-import { GameEngine } from "../pixi/GameEngine";
-import { StartGamePanel } from "./StartGamePanel";
-import { GameBoard } from "./GameBoard";
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { Pages } from "../common/Pages";
+import { CreateOrJoinPage } from "./pages/CreateOrJoinPage";
+import { ErrorPage } from "./pages/ErrorPage";
+import { CreateGamePage } from "./pages/CreateGamePage";
+import { JoinGamePage } from "./pages/JoinGamePage";
+import { SetNamePage } from "./pages/SetNamePage";
+import { GameLobbyPage } from "./pages/GameLobbyPage";
 import "../styles/App.css";
 
-const renderer = new GameEngine();
-renderer.style.position = "absolute";
-renderer.style.top = "0";
-
 export function App() {
-	const [gameState, setGameState] = useState(0);
-	const [score, setScore] = useState(0);
-	const [lives, setLives] = useState(3);
-	const startGame = () => {
-		renderer.playGame();
-		setGameState(1);
-	};
-	const updateLives = useCallback(
-		(lives: number) => {
-			if (lives === 0) {
-				renderer.resetGame();
-				setGameState(0);
-				renderer.playStartScreen();
-				return;
-			}
-			setLives(lives);
-		},
-		[setLives, setGameState]
-	);
-	useEffect(() => {
-		renderer.setLivesChangedCB(updateLives);
-		renderer.setScoreChangedCB(setScore);
-	}, [updateLives, setScore]);
+	const [page, setPage] = useState<Pages>(Pages.SET_NAME_PAGE);
+	let pageCmp = <ErrorPage />;
+	if (page === Pages.HOME_PAGE) {
+		pageCmp = <CreateOrJoinPage setPage={setPage} />;
+	} else if (page === Pages.JOIN_PAGE) {
+		pageCmp = <JoinGamePage setPage={setPage} />;
+	} else if (page === Pages.CREATE_PAGE) {
+		pageCmp = <CreateGamePage setPage={setPage} />;
+	} else if (page === Pages.SET_NAME_PAGE) {
+		pageCmp = <SetNamePage setPage={setPage} />;
+	} else if (page === Pages.GAME_LOBBY) {
+		pageCmp = <GameLobbyPage setPage={setPage} />;
+	}
 	return (
 		<div id="background" className="d-flex text-white">
-			{gameState === 0 ? <StartGamePanel startGame={startGame} /> : <GameBoard lives={lives} score={score} />}
+			{pageCmp}
 		</div>
 	);
 }
