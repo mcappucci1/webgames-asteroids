@@ -1,0 +1,7 @@
+export enum Pages {
+	HOME_PAGE,
+	JOIN_PAGE,
+	CREATE_PAGE,
+	SET_NAME_PAGE,
+	GAME_LOBBY,
+}

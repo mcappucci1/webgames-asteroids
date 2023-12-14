@@ -31,6 +31,18 @@ body,
 	left: 0;
 }
 
+.bold {
+	font-weight: 700;
+}
+
+.large-text {
+	font-size: larger;
+}
+
+.justify-self-end {
+	justify-self: end;
+}
+
 .test {
 	border: 1px solid red;
 }

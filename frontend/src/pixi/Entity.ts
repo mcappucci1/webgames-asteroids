@@ -60,7 +60,6 @@ class CollisionBody extends Graphics {
 }
 
 export class Entity {
-	static stage: Container<DisplayObject>;
 	protected theta: number = 0;
 	public graphic: CollisionBody;
 	protected velocity: number[] = [0, 0];
@@ -69,7 +68,6 @@ export class Entity {
 
 	constructor(graphicData: Array<IPointData>, explosive?: boolean, treatAsPoint?: boolean) {
 		this.graphic = new CollisionBody(graphicData, treatAsPoint);
-		Entity.stage.addChild(this.graphic);
 		this.explosive = explosive === undefined ? true : explosive;
 	}
 
@@ -128,7 +126,6 @@ export class Entity {
 	}
 
 	destroy() {
-		Entity.stage.removeChild(this.graphic);
 		this.graphic.destroy();
 	}
 
