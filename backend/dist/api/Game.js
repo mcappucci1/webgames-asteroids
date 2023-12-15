@@ -2,9 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Game = void 0;
 const Message_1 = require("./Message");
+const GameUtils_1 = require("./GameUtils");
 class Game {
     constructor(name) {
         this.clients = [];
+        this.generateAsteroidInterval = 1000;
         this.name = name;
     }
     addClient(client) {
@@ -16,12 +18,28 @@ class Game {
         }
     }
     start() {
+        this.clients.forEach((client) => {
+            const msg = new Message_1.Message(Message_1.MessageType.START_GAME, { data: {} });
+            client.sendMessage(msg);
+        });
         setInterval(() => {
+            const { startPoint, theta, moveEntity, speed } = GameUtils_1.GameUtils.generateRandomEntity();
+            const data = {
+                data: {
+                    type: "asteroid",
+                    data: {
+                        speed,
+                        moveEntity,
+                        location: startPoint,
+                        angle: theta,
+                    },
+                },
+            };
             this.clients.forEach((client) => {
-                console.log(client.name);
-                client.sendMessage({ data: "test" });
+                const msg = new Message_1.Message(Message_1.MessageType.GAME_DATA, data);
+                client.sendMessage(msg);
             });
-        }, 1000);
+        }, this.generateAsteroidInterval);
     }
     getInfo() {
         return {

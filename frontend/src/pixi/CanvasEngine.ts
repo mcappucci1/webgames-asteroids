@@ -22,11 +22,15 @@ export class CanvasEngine {
 		CanvasEngine.singleton.app.ticker.add(cb);
 	}
 
+	static removeTickerCB(cb: TickerCallback<null>) {
+		CanvasEngine.singleton.app.ticker.remove(cb);
+	}
+
 	static addChild(entity: Entity) {
 		CanvasEngine.singleton.app.stage.addChild(entity.graphic);
 	}
 
-	clear() {
-		this.app.stage.removeChildren();
+	static clear() {
+		this.singleton.app.stage.removeChildren();
 	}
 }

@@ -1,21 +1,27 @@
 import { PageOutline, PageProps } from "../utils/PageOutline";
 import { WebSocketClient } from "../../api/WebSocketClient";
-import { useEffect, useState } from "react";
-import { MessageType, MessageData } from "../../common/Message";
+import { useEffect, useState, useCallback } from "react";
+import { MessageData, MessageType } from "../../common/Message";
+import { Pages } from "../../common/Pages";
 import { Spinner } from "../utils/Spinner";
 import "../../styles/GameLobbyPage.css";
 
 export const GameLobbyPage = ({ setPage }: PageProps) => {
 	const [gameInfo, setGameInfo] = useState<any | undefined>(undefined);
+	const startGameCB = useCallback(() => {
+		WebSocketClient.addMessageHandler(MessageType.GAME_DATA, () => setPage(Pages.PLAY_GAME));
+		WebSocketClient.startGame();
+	}, []);
 	useEffect(() => {
 		const getGameDataCB = (data: MessageData) => {
 			// TODO: Handle failure
 			setGameInfo(data.data.data);
 		};
 		if (gameInfo == null) {
+			WebSocketClient.addMessageHandler(MessageType.START_GAME, () => setPage(Pages.PLAY_GAME));
 			WebSocketClient.getGameInfo(getGameDataCB);
 		}
-	}, [gameInfo]);
+	}, [gameInfo, setPage]);
 	return (
 		<PageOutline title="Game Lobby">
 			{gameInfo == null ? (
@@ -37,7 +43,9 @@ export const GameLobbyPage = ({ setPage }: PageProps) => {
 						</ol>
 					</div>
 					<div className="mt-5 me-3 d-flex justify-content-end">
-						<button className="custom-button">Start Game</button>
+						<button className="custom-button" onClick={startGameCB}>
+							Start Game
+						</button>
 					</div>
 				</div>
 			)}

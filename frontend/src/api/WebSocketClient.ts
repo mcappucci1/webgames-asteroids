@@ -119,4 +119,9 @@ export class WebSocketClient {
 		const msg = new Message(MessageType.GET_GAME_INFO, { data: WebSocketClient.singleton.gameName });
 		this.singleton.ws.send(JSON.stringify(msg));
 	}
+
+	static startGame() {
+		const msg = new Message(MessageType.START_GAME, { data: {} });
+		this.singleton.ws.send(JSON.stringify(msg));
+	}
 }

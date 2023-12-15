@@ -16,4 +16,5 @@ var MessageType;
     MessageType[MessageType["ADD_CLIENT_TO_GAME"] = 3] = "ADD_CLIENT_TO_GAME";
     MessageType[MessageType["START_GAME"] = 4] = "START_GAME";
     MessageType[MessageType["GET_GAME_INFO"] = 5] = "GET_GAME_INFO";
+    MessageType[MessageType["GAME_DATA"] = 6] = "GAME_DATA";
 })(MessageType || (exports.MessageType = MessageType = {}));

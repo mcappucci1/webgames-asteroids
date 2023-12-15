@@ -1,9 +1,11 @@
 import { Client } from "./Client";
 import { Message, MessageType } from "./Message";
+import { GameUtils } from "./GameUtils";
 
 export class Game {
 	public name: string;
 	private clients: Array<Client> = [];
+	private generateAsteroidInterval: number = 1000;
 
 	constructor(name: string) {
 		this.name = name;
@@ -19,12 +21,28 @@ export class Game {
 	}
 
 	start() {
+		this.clients.forEach((client) => {
+			const msg = new Message(MessageType.START_GAME, { data: {} });
+			client.sendMessage(msg);
+		});
 		setInterval(() => {
+			const { startPoint, theta, moveEntity, speed } = GameUtils.generateRandomEntity();
+			const data = {
+				data: {
+					type: "asteroid",
+					data: {
+						speed,
+						moveEntity,
+						location: startPoint,
+						angle: theta,
+					},
+				},
+			};
 			this.clients.forEach((client) => {
-				console.log(client.name);
-				client.sendMessage({ data: "test" });
+				const msg = new Message(MessageType.GAME_DATA, data);
+				client.sendMessage(msg);
 			});
-		}, 1000);
+		}, this.generateAsteroidInterval);
 	}
 
 	getInfo() {

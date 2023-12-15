@@ -4,4 +4,5 @@ export enum Pages {
 	CREATE_PAGE,
 	SET_NAME_PAGE,
 	GAME_LOBBY,
+	PLAY_GAME,
 }

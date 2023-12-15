@@ -15,6 +15,7 @@ export enum MessageType {
 	ADD_CLIENT_TO_GAME,
 	START_GAME,
 	GET_GAME_INFO,
+	GAME_DATA,
 }
 
 export type MessageData = {

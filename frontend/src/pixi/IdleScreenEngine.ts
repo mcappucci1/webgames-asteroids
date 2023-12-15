@@ -1,6 +1,7 @@
 import { Asteroid } from "./Asteroid";
 import { CanvasEngine } from "./CanvasEngine";
 import { Entity } from "./Entity";
+import { TickerCallback } from "pixi.js";
 
 export class IdleScreenEngine {
 	static singleton: IdleScreenEngine = new IdleScreenEngine();
@@ -8,6 +9,7 @@ export class IdleScreenEngine {
 	private asteroids: Array<Asteroid> = [];
 	private lastAsteroidCreation: number = 0;
 	private started: boolean = false;
+	static moveAsteroidsCB: TickerCallback<null> = (dt: number) => this.singleton.moveAsteroids(dt);
 
 	generateAsteroid() {
 		const asteroid = Asteroid.generateRandomAsteroid();
@@ -79,8 +81,14 @@ export class IdleScreenEngine {
 		if (IdleScreenEngine.singleton.started) {
 			return;
 		}
-		CanvasEngine.addTickerCB((dt: number) => this.singleton.moveAsteroids(dt));
+		CanvasEngine.addTickerCB(IdleScreenEngine.moveAsteroidsCB);
 	}
 
-	static stop() {}
+	static stop() {
+		if (IdleScreenEngine.singleton.started) {
+			return;
+		}
+		CanvasEngine.removeTickerCB(IdleScreenEngine.moveAsteroidsCB);
+		CanvasEngine.clear();
+	}
 }

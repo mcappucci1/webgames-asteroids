@@ -7,6 +7,7 @@ import { JoinGamePage } from "./pages/JoinGamePage";
 import { SetNamePage } from "./pages/SetNamePage";
 import { GameLobbyPage } from "./pages/GameLobbyPage";
 import "../styles/App.css";
+import { PlayGamePage } from "./pages/PlayGamePage";
 
 export function App() {
 	const [page, setPage] = useState<Pages>(Pages.SET_NAME_PAGE);
@@ -21,6 +22,8 @@ export function App() {
 		pageCmp = <SetNamePage setPage={setPage} />;
 	} else if (page === Pages.GAME_LOBBY) {
 		pageCmp = <GameLobbyPage setPage={setPage} />;
+	} else if (page === Pages.PLAY_GAME) {
+		pageCmp = <PlayGamePage />;
 	}
 	return (
 		<div id="background" className="d-flex text-white">
