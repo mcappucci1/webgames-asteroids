@@ -1,5 +1,7 @@
+import { EntityData } from "./EntityData";
+
 export class GameUtils {
-	static generateRandomEntity() {
+	static generateRandomEntity(): EntityData {
 		let theta;
 		let startPoint;
 		let moveEntity;
@@ -29,12 +31,13 @@ export class GameUtils {
 			moveEntity = [-1, 0];
 		}
 		const speed = 0.5 + Math.random() ** 2 * 4;
-		return { startPoint, theta, moveEntity, speed };
+		return { id: 0, startPoint, theta, moveEntity, speed };
 	}
 
-	static generateRandomAsteroid() {
+	static generateRandomAsteroid(): EntityData {
 		const randomData = GameUtils.generateRandomEntity();
 		const scale = Math.sqrt(1 / Math.pow(2, Math.floor(Math.random() * 3)));
 		const style = Math.floor(Math.random() * 3);
+		return { scale, style, ...randomData };
 	}
 }

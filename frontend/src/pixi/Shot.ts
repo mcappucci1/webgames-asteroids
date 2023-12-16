@@ -8,7 +8,7 @@ const geoData = [
 ];
 
 export class Shot extends Entity {
-	constructor() {
-		super(geoData, false, true);
+	constructor(id: number) {
+		super(geoData, id, false, true);
 	}
 }

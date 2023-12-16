@@ -112,7 +112,7 @@ export class GameEngine {
 			asteroid.setVelocity(0.03 + Math.random() ** 2 * 0.35);
 			this.asteroids.push(asteroid);
 			if (Math.random() < 0.15) {
-				const alienShip = new AlienShip();
+				const alienShip = new AlienShip(0);
 				const rand = this.getRandomStart(asteroid);
 				alienShip.setPosition(rand.startPoint[0], rand.startPoint[1]);
 				alienShip.setAngle(rand.theta);

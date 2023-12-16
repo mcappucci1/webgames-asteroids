@@ -18,10 +18,10 @@ const alienShip = [
 export class AlienShip extends Entity {
 	private shootInterval: NodeJS.Timer | undefined;
 
-	constructor() {
-		super(alienShip);
+	constructor(id: number) {
+		super(alienShip, id);
 		this.shootInterval = setInterval(() => {
-			const shot = new Shot();
+			const shot = new Shot(0);
 			shot.setAngle(Math.PI * 2 * Math.random());
 			shot.setVelocity(0.75);
 			shot.setPosition(this.graphic.x, this.graphic.y);

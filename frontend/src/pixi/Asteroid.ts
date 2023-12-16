@@ -48,8 +48,8 @@ const graphicPoints: Array<Array<IPointData>> = [
 export class Asteroid extends Entity {
 	private style: number;
 
-	constructor(scale: number, style: number) {
-		super(graphicPoints[style]);
+	constructor(scale: number, style: number, id: number) {
+		super(graphicPoints[style], id);
 		super.setScale(scale);
 		this.style = style;
 		this.score = Math.round(scale ** 2 * 100);
@@ -58,7 +58,7 @@ export class Asteroid extends Entity {
 	static generateRandomAsteroid() {
 		const scale = Math.sqrt(1 / Math.pow(2, Math.floor(Math.random() * 3)));
 		const style = Math.floor(Math.random() * 3);
-		return new Asteroid(scale, style);
+		return new Asteroid(scale, style, 0);
 	}
 
 	split() {
@@ -67,7 +67,7 @@ export class Asteroid extends Entity {
 		}
 		const newScale = Math.sqrt(this.graphic.scale.x ** 2 / 2);
 		const splitAngle = 0.02 + (Math.random() * Math.PI) / 3;
-		const asteroids = [new Asteroid(newScale, this.style), new Asteroid(newScale, this.style)];
+		const asteroids = [new Asteroid(newScale, this.style, 0), new Asteroid(newScale, this.style, 0)];
 		asteroids.forEach((asteroid, i) => {
 			asteroid.setVelocity(this.getNormalizedVelocity());
 			asteroid.setAngle(this.theta + splitAngle * (i === 1 ? -1 : 1));

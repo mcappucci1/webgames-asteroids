@@ -65,10 +65,12 @@ export class Entity {
 	protected velocity: number[] = [0, 0];
 	protected score: number = 0;
 	protected explosive: boolean;
+	public id: number;
 
-	constructor(graphicData: Array<IPointData>, explosive?: boolean, treatAsPoint?: boolean) {
+	constructor(graphicData: Array<IPointData>, id: number, explosive?: boolean, treatAsPoint?: boolean) {
 		this.graphic = new CollisionBody(graphicData, treatAsPoint);
 		this.explosive = explosive === undefined ? true : explosive;
+		this.id = id;
 	}
 
 	getNormalizedVelocity() {
@@ -112,7 +114,9 @@ export class Entity {
 	}
 
 	move(delta: number) {
-		this.setPosition(this.graphic.x + this.velocity[0] * delta, this.graphic.y + this.velocity[1] * delta);
+		const x = this.graphic.x + (this.velocity[0] * delta * window.innerWidth) / 1000;
+		const y = this.graphic.y + (this.velocity[1] * delta * window.innerHeight) / 1000;
+		this.setPosition(x, y);
 	}
 
 	rotateClockwiseBy(delta: number) {
@@ -146,7 +150,7 @@ export class Entity {
 		const points: Entity[] = [];
 		let angle = -Math.PI / 3;
 		for (let i = 0; i < numDots; ++i) {
-			const dot = new Entity(geoData);
+			const dot = new Entity(geoData, 0);
 			dot.setPosition(this.graphic.x, this.graphic.y);
 			dot.setAngle(this.theta + angle);
 			dot.setVelocity(0.05);

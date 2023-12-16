@@ -32,7 +32,13 @@ class GameUtils {
             moveEntity = [-1, 0];
         }
         const speed = 0.5 + Math.random() ** 2 * 4;
-        return { startPoint, theta, moveEntity, speed };
+        return { id: 0, startPoint, theta, moveEntity, speed };
+    }
+    static generateRandomAsteroid() {
+        const randomData = GameUtils.generateRandomEntity();
+        const scale = Math.sqrt(1 / Math.pow(2, Math.floor(Math.random() * 3)));
+        const style = Math.floor(Math.random() * 3);
+        return Object.assign({ scale, style }, randomData);
     }
 }
 exports.GameUtils = GameUtils;

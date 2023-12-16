@@ -35,7 +35,7 @@ export class Ship extends Entity {
 	private shootInterval: NodeJS.Timer | undefined;
 
 	constructor() {
-		super(ship);
+		super(ship, 0);
 	}
 
 	onKeydownEvent(key: string) {
@@ -63,7 +63,7 @@ export class Ship extends Entity {
 	}
 
 	createShot() {
-		const shot = new Shot();
+		const shot = new Shot(0);
 		shot.setAngle(this.theta);
 		shot.setVelocity(0.75);
 		shot.setPosition(this.graphic.x, this.graphic.y);
