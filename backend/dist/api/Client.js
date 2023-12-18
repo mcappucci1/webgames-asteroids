@@ -12,7 +12,7 @@ class Client {
         return JSON.parse(buf.toString());
     }
     route(rawData) {
-        var _a;
+        var _a, _b;
         const msg = this.parseMessage(rawData);
         const { msgType, data } = msg;
         console.log(msg);
@@ -58,6 +58,9 @@ class Client {
             const response = new Message_1.Message(Message_1.MessageType.GET_GAME_INFO, responseData);
             console.log(gameData);
             this.sendMessage(response);
+        }
+        else if (msgType === Message_1.MessageType.GAME_DATA) {
+            (_b = this.game) === null || _b === void 0 ? void 0 : _b.setShipData(data);
         }
     }
     setGame(game) {

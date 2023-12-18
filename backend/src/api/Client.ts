@@ -61,6 +61,8 @@ export class Client {
 			const response = new Message(MessageType.GET_GAME_INFO, responseData);
 			console.log(gameData);
 			this.sendMessage(response);
+		} else if (msgType === MessageType.GAME_DATA) {
+			this.game?.setShipData(data);
 		}
 	}
 

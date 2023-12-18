@@ -1,7 +1,8 @@
 import { Client } from "./Client";
-import { Message, MessageType } from "./Message";
+import { Message, MessageType, MessageData } from "./Message";
 import { GameUtils } from "./GameUtils";
 import { AlienShip } from "./AlienShip";
+import { Ship } from "./Ship";
 
 export class Game {
 	static maxId: number = 1000;
@@ -12,9 +13,25 @@ export class Game {
 	private alienId: number = 0;
 	private asteroidId: number = 0;
 	private alienShotId: number = 0;
+	private ships: Array<Ship> = [];
 
 	constructor(name: string) {
 		this.name = name;
+	}
+
+	setShipData(data: MessageData) {
+		const { type } = data.data;
+		if (type === "ship") {
+			const { id, down, key } = data.data;
+			const msgData = {
+				data: { type: "ship", data: { action: "keypress", id, down, key } },
+			};
+			console.log("test");
+			console.log(msgData);
+			this.clients.forEach((client) => {
+				client.sendMessage(new Message(MessageType.GAME_DATA, msgData));
+			});
+		}
 	}
 
 	addClient(client: Client) {
@@ -57,28 +74,47 @@ export class Game {
 		});
 	}
 
-	start() {
+	generateAsteroids() {
+		const asteroidData = GameUtils.generateRandomAsteroid();
+		asteroidData.id = this.asteroidId;
+		this.asteroidId = ++this.asteroidId % Game.maxId;
+		const data = {
+			data: { type: "asteroid", data: asteroidData },
+		};
 		this.clients.forEach((client) => {
+			const msg = new Message(MessageType.GAME_DATA, data);
+			client.sendMessage(msg);
+		});
+	}
+
+	generateClientShips() {
+		const diff = 1 / (this.clients.length + 1);
+		const data = {
+			data: {
+				type: "ship",
+				data: { speed: 10, position: [0, 1], theta: Math.PI / 4, moveEntity: [0, 1], id: 0 },
+			},
+		};
+		this.clients.forEach((client, i) => {
+			this.ships.push(new Ship(i));
+			data.data.data.position[0] = diff * (i + 1);
+			data.data.data.id = i;
+			const msg = new Message(MessageType.GAME_DATA, data);
+			client.sendMessage(msg);
+		});
+	}
+
+	start() {
+		this.clients.forEach((client, i) => {
 			const msg = new Message(MessageType.START_GAME, { data: {} });
 			client.sendMessage(msg);
 		});
+		this.generateClientShips();
 		setInterval(() => {
 			if (Math.random() < 0.05) {
 				this.generateAlienShip();
 			}
-			const asteroidData = GameUtils.generateRandomAsteroid();
-			asteroidData.id = this.asteroidId;
-			this.asteroidId = ++this.asteroidId % Game.maxId;
-			const data = {
-				data: {
-					type: "asteroid",
-					data: asteroidData,
-				},
-			};
-			this.clients.forEach((client) => {
-				const msg = new Message(MessageType.GAME_DATA, data);
-				client.sendMessage(msg);
-			});
+			this.generateAsteroids();
 		}, this.generateAsteroidInterval);
 	}
 

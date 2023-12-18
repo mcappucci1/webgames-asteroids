@@ -124,4 +124,20 @@ export class WebSocketClient {
 		const msg = new Message(MessageType.START_GAME, { data: {} });
 		this.singleton.ws.send(JSON.stringify(msg));
 	}
+
+	static setShipKeyDown(down: boolean, key: string, id: number) {
+		if (!WebSocketClient.singleton.ready || WebSocketClient.singleton.gameName == null) {
+			return;
+		}
+		const gameData = {
+			data: {
+				type: "ship",
+				down,
+				key,
+				id,
+			},
+		};
+		const msg = new Message(MessageType.GAME_DATA, gameData);
+		this.singleton.ws.send(JSON.stringify(msg));
+	}
 }

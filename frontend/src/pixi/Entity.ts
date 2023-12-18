@@ -1,5 +1,6 @@
 import { Graphics, IPointData, ILineStyleOptions } from "pixi.js";
 import { segmentIntersection } from "@pixi/math-extras";
+import { CanvasEngine } from "./CanvasEngine";
 
 const lineStyle: ILineStyleOptions = {
 	width: 4,
@@ -156,6 +157,7 @@ export class Entity {
 			dot.setVelocity(0.05);
 			points.push(dot);
 			angle += (2 * Math.PI) / 9;
+			CanvasEngine.addChild(dot);
 		}
 		let lastTime: number | undefined;
 		const update = (time: number) => {

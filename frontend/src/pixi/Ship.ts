@@ -2,6 +2,8 @@ import { IPointData } from "pixi.js";
 import { Entity } from "./Entity";
 import { Shot } from "./Shot";
 import { GameEngine } from "./GameEngine";
+import { ClientGameEngine } from "./ClientGameEngine";
+import { WebSocketClient } from "../api/WebSocketClient";
 
 const ship: Array<IPointData> = [
 	{ x: 0, y: 0 },
@@ -63,11 +65,7 @@ export class Ship extends Entity {
 	}
 
 	createShot() {
-		const shot = new Shot(0);
-		shot.setAngle(this.theta);
-		shot.setVelocity(0.75);
-		shot.setPosition(this.graphic.x, this.graphic.y);
-		GameEngine.shots.push(shot);
+		ClientGameEngine.addShot(10, this.theta, [this.graphic.x, this.graphic.y]);
 	}
 
 	startShoot() {
@@ -106,7 +104,7 @@ export class Ship extends Entity {
 			this.rotateClockwiseBy(0.075);
 		}
 		if (this.thrusting) {
-			const forwardAcceleration = Ship.engineForce / Ship.mass;
+			const forwardAcceleration = (Ship.engineForce / Ship.mass) * 100;
 			this.velocity[0] += forwardAcceleration * delta * Math.cos(this.graphic.rotation);
 			this.velocity[1] += forwardAcceleration * delta * Math.sin(this.graphic.rotation);
 		}
@@ -135,6 +133,15 @@ export class Ship extends Entity {
 		this.setRotation((3 * Math.PI) / 2);
 		this.setAngle((3 * Math.PI) / 2);
 		this.setVelocity(0.25);
+	}
+
+	sendMessage(key: string, down: boolean) {
+		WebSocketClient.setShipKeyDown(down, key, this.id);
+	}
+
+	addKeyPressListeners() {
+		window.addEventListener("keydown", (e: KeyboardEvent) => this.sendMessage(e.key, true));
+		window.addEventListener("keyup", (e: KeyboardEvent) => this.sendMessage(e.key, false));
 	}
 
 	destroy(): void {
