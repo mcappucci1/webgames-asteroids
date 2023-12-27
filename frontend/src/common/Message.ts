@@ -16,6 +16,7 @@ export enum MessageType {
 	START_GAME,
 	GET_GAME_INFO,
 	GAME_DATA,
+	CONNECTION_LOST,
 }
 
 export type MessageData = {

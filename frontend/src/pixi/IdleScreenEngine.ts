@@ -82,6 +82,7 @@ export class IdleScreenEngine {
 			return;
 		}
 		CanvasEngine.addTickerCB(IdleScreenEngine.moveAsteroidsCB);
+		IdleScreenEngine.singleton.started = true;
 	}
 
 	static stop() {
@@ -90,5 +91,6 @@ export class IdleScreenEngine {
 		}
 		CanvasEngine.removeTickerCB(IdleScreenEngine.moveAsteroidsCB);
 		CanvasEngine.clear();
+		IdleScreenEngine.singleton.started = false;
 	}
 }
