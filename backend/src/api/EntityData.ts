@@ -6,4 +6,11 @@ export type EntityData = {
 	speed: number;
 	scale?: number;
 	style?: number;
+	shipId?: number;
+};
+
+export type EntityGameData = {
+	id: number;
+	down: boolean;
+	key: string;
 };

@@ -38,8 +38,10 @@ export class WebSocketClient {
 			}
 		};
 		this.ws.onclose = () => {
-			const cb = this.cbs.get(MessageType.CONNECTION_LOST)!;
-			cb({ data: { success: false, error: "Client connection error occurred" } });
+			if (this.ready) {
+				const cb = this.cbs.get(MessageType.CONNECTION_LOST)!;
+				cb({ data: { success: false, error: "Client connection error occurred" } });
+			}
 			this.ready = false;
 		};
 	}

@@ -6,25 +6,13 @@ import { IdleScreenEngine } from "../../pixi/IdleScreenEngine";
 import { Pages } from "../../common/Pages";
 import { MessageData } from "../../common/Message";
 import { ToastContainer, toast } from "react-toastify";
+import { TOAST_DISAPPEAR_OPTIONS } from "../utils/Toastify";
+import { STRING_LENGTH_LIMIT } from "../utils/Sanitize";
 import "react-toastify/dist/ReactToastify.css";
-
-const MAX_NAME_LENGTH = 15;
 
 export const SetNamePage = ({ setPage }: PageProps) => {
 	useEffect(() => {
 		IdleScreenEngine.start();
-	}, []);
-
-	const setErrorMessage = useCallback((errorMsg: string) => {
-		toast.error(errorMsg, {
-			position: "top-center",
-			autoClose: 5000,
-			hideProgressBar: false,
-			closeOnClick: true,
-			pauseOnHover: true,
-			progress: undefined,
-			theme: "dark",
-		});
 	}, []);
 
 	const changePageCB = useCallback(
@@ -33,24 +21,28 @@ export const SetNamePage = ({ setPage }: PageProps) => {
 				WebSocketClient.singleton!.name = data.data.data.name;
 				setPage(Pages.HOME_PAGE);
 			} else {
-				setErrorMessage("Failed to set name.");
+				toast.error("Failed to set name.", TOAST_DISAPPEAR_OPTIONS);
 			}
 		},
-		[setPage, setErrorMessage]
+		[setPage]
 	);
 
 	const handleNameEntry = useCallback(
 		(name: string) => {
 			if (name.length === 0) {
-				setErrorMessage("Name must be non-empty.");
+				console.log("test");
+				toast.error("Name must be non-empty.", TOAST_DISAPPEAR_OPTIONS);
 				return;
-			} else if (name.length > MAX_NAME_LENGTH) {
-				setErrorMessage(`Name must be at most 15 characters (${name.length}/${MAX_NAME_LENGTH})`);
+			} else if (name.length > STRING_LENGTH_LIMIT) {
+				toast.error(
+					`Name must be at most ${STRING_LENGTH_LIMIT} characters (${name.length}/${STRING_LENGTH_LIMIT})`,
+					TOAST_DISAPPEAR_OPTIONS
+				);
 				return;
 			}
 			WebSocketClient.submitClientName(name, changePageCB);
 		},
-		[changePageCB, setErrorMessage]
+		[changePageCB]
 	);
 
 	return (

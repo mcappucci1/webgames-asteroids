@@ -9,7 +9,8 @@ import { GameLobbyPage } from "./pages/GameLobbyPage";
 import { PlayGamePage } from "./pages/PlayGamePage";
 import { MessageData } from "../common/Message";
 import { WebSocketClient } from "../api/WebSocketClient";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
+import { TOAST_PERMANENT_OPTIONS } from "./utils/Toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../styles/App.css";
 
@@ -18,14 +19,8 @@ export function App() {
 
 	const showErrorToast = useCallback((data: MessageData) => {
 		if (!data.data.success) {
-			toast.error("Cannot connect to backend. Refresh page.", {
-				position: "top-center",
-				closeOnClick: true,
-				pauseOnHover: false,
-				autoClose: false,
-				hideProgressBar: true,
-				theme: "dark",
-			});
+			console.log("test");
+			toast.error("Cannot connect to backend. Refresh page.", TOAST_PERMANENT_OPTIONS);
 		}
 	}, []);
 
@@ -50,7 +45,6 @@ export function App() {
 
 	return (
 		<div id="background" className="d-flex text-white">
-			<ToastContainer />
 			{pageCmp}
 		</div>
 	);
