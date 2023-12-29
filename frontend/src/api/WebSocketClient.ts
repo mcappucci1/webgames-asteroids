@@ -70,7 +70,9 @@ export class WebSocketClient {
 	}
 
 	static sendMessage(type: MessageType, data: MessageData, cb?: Function) {
-		cb && this.singleton?.cbs.set(type, cb);
+		if (cb != null) {
+			this.singleton?.cbs.set(type, cb);
+		}
 		const msg = new Message(type, data);
 		this.singleton?.ws?.send(JSON.stringify(msg));
 	}
@@ -81,6 +83,14 @@ export class WebSocketClient {
 			return;
 		}
 		WebSocketClient.sendMessage(MessageType.SET_CLIENT_NAME, { data: name }, cb);
+	}
+
+	static removeClientFromGame(cb: Function) {
+		if (!WebSocketClient.singletonReady() || this.singleton?.gameName == null) {
+			WebSocketClient.immediateError("Cannot disconnect from game", MessageType.REMOVE_CLIENT_FROM_GAME, cb);
+			return;
+		}
+		WebSocketClient.sendMessage(MessageType.REMOVE_CLIENT_FROM_GAME, { data: undefined }, cb);
 	}
 
 	static createGame(name: string, cb: Function) {
@@ -107,6 +117,7 @@ export class WebSocketClient {
 			WebSocketClient.immediateError("Client not initialized", MessageType.GET_GAME_INFO, cb);
 			return;
 		}
+		this.singleton?.cbs.set(MessageType.GET_GAME_INFO, cb);
 		WebSocketClient.sendMessage(MessageType.GET_GAME_INFO, { data: WebSocketClient.singleton?.gameName }, cb);
 	}
 

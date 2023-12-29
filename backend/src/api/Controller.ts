@@ -22,9 +22,15 @@ export class Controller {
 			return undefined;
 		}
 
-		const game = new Game(name);
+		const game = new Game(name, this);
 		this.games.set(name, game);
 		return game;
+	}
+
+	removeGame(name: string) {
+		if (this.games.has(name)) {
+			this.games.delete(name);
+		}
 	}
 
 	addClientToGame(gameName: string, client: Client): boolean {

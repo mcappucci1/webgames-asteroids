@@ -6,7 +6,7 @@ const GameUtils_1 = require("./GameUtils");
 const AlienShip_1 = require("./AlienShip");
 const Ship_1 = require("./Ship");
 class Game {
-    constructor(name) {
+    constructor(name, controller) {
         this.started = false;
         this.clients = [];
         this.generateAsteroidInterval = 1000;
@@ -16,6 +16,7 @@ class Game {
         this.alienShotId = 0;
         this.ships = [];
         this.name = name;
+        this.controller = controller;
     }
     setShipData(data) {
         for (const client of this.clients) {
@@ -26,10 +27,27 @@ class Game {
         if (this.clients.length === Game.maxClients || this.started) {
             return false;
         }
+        client.setGame(this);
         this.clients.push(client);
-        const responseData = { data: this.getInfo() };
+        const responseData = this.getInfo();
         for (const client of this.clients) {
-            client.sendMessage(true, undefined, Message_1.MessageType.GAME_DATA, responseData);
+            client.sendMessage(true, undefined, Message_1.MessageType.GET_GAME_INFO, responseData);
+        }
+        return true;
+    }
+    removeClient(client) {
+        const i = this.clients.indexOf(client);
+        if (i === -1) {
+            return false;
+        }
+        this.clients.splice(i, 1);
+        client.setGame(undefined);
+        const responseData = this.getInfo();
+        for (const client of this.clients) {
+            client.sendMessage(true, undefined, Message_1.MessageType.GET_GAME_INFO, responseData);
+        }
+        if (this.clients.length === 0) {
+            this.destroy();
         }
         return true;
     }
@@ -39,7 +57,8 @@ class Game {
         this.alienShips.push(new AlienShip_1.AlienShip(this.alienId, (shipId) => this.generateAlienShot(shipId)));
         this.alienId = ++this.alienId % Game.maxId;
         const alienShipMsg = {
-            data: { type: "alienShip", data: alienShipData },
+            type: "alienShip",
+            data: alienShipData,
         };
         for (const client of this.clients) {
             client.sendMessage(true, undefined, Message_1.MessageType.GAME_DATA, alienShipMsg);
@@ -51,10 +70,8 @@ class Game {
         alienShotData.id = this.alienShotId;
         this.alienShotId = ++this.alienShotId % Game.maxId;
         const alienShotMsgData = {
-            data: {
-                type: "alienShot",
-                data: alienShotData,
-            },
+            type: "alienShot",
+            data: alienShotData,
         };
         for (const client of this.clients) {
             client.sendMessage(true, undefined, Message_1.MessageType.GAME_DATA, alienShotMsgData);
@@ -65,7 +82,8 @@ class Game {
         asteroidData.id = this.asteroidId;
         this.asteroidId = ++this.asteroidId % Game.maxId;
         const data = {
-            data: { type: "asteroid", data: asteroidData },
+            type: "asteroid",
+            data: asteroidData,
         };
         for (const client of this.clients) {
             client.sendMessage(true, undefined, Message_1.MessageType.GAME_DATA, data);
@@ -74,18 +92,16 @@ class Game {
     generateClientShips() {
         const diff = 1 / (this.clients.length + 1);
         const data = {
-            data: {
-                speed: 10,
-                position: [0, 1],
-                theta: Math.PI / 4,
-                moveEntity: [0, 1],
-                id: 0,
-            },
+            speed: 10,
+            position: [0, 1],
+            theta: Math.PI / 4,
+            moveEntity: [0, 1],
+            id: 0,
         };
         for (let i = 0; i < this.clients.length; ++i) {
             this.ships.push(new Ship_1.Ship(i));
-            data.data.position[0] = diff * (i + 1);
-            data.data.id = i;
+            data.position[0] = diff * (i + 1);
+            data.id = i;
             this.clients[i].sendMessage(true, undefined, Message_1.MessageType.GAME_DATA, data);
         }
     }
@@ -95,7 +111,7 @@ class Game {
         }
         this.started = true;
         for (const client of this.clients) {
-            client.sendMessage(true, undefined, Message_1.MessageType.START_GAME, { data: {} });
+            client.sendMessage(true, undefined, Message_1.MessageType.START_GAME, undefined);
         }
         this.generateClientShips();
         setInterval(() => {
@@ -104,6 +120,15 @@ class Game {
             }
             this.generateAsteroids();
         }, this.generateAsteroidInterval);
+    }
+    destroy() {
+        if (this.generateAsteroidInterval != null) {
+            clearInterval(this.generateAsteroidInterval);
+        }
+        for (const client of this.clients) {
+            client.setGame(undefined);
+        }
+        this.controller.removeGame(this.name);
     }
     getInfo() {
         return {

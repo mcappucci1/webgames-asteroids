@@ -21,9 +21,14 @@ class Controller {
         if (name == null || this.games.has(name)) {
             return undefined;
         }
-        const game = new Game_1.Game(name);
+        const game = new Game_1.Game(name, this);
         this.games.set(name, game);
         return game;
+    }
+    removeGame(name) {
+        if (this.games.has(name)) {
+            this.games.delete(name);
+        }
     }
     addClientToGame(gameName, client) {
         if (!this.games.has(gameName)) {

@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Pages } from "../common/Pages";
 import { CreateOrJoinPage } from "./pages/CreateOrJoinPage";
-import { ErrorPage } from "./pages/ErrorPage";
 import { CreateGamePage } from "./pages/CreateGamePage";
 import { JoinGamePage } from "./pages/JoinGamePage";
 import { SetNamePage } from "./pages/SetNamePage";
@@ -28,7 +27,7 @@ export function App() {
 		WebSocketClient.initializeSingleton(showErrorToast);
 	}, [showErrorToast]);
 
-	let pageCmp = <ErrorPage />;
+	let pageCmp = undefined;
 	if (page === Pages.HOME_PAGE) {
 		pageCmp = <CreateOrJoinPage setPage={setPage} />;
 	} else if (page === Pages.JOIN_PAGE) {

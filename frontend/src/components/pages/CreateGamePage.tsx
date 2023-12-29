@@ -46,7 +46,7 @@ export const CreateGamePage = ({ setPage }: PageProps) => {
 			<div className="w-100 d-flex justify-content-center">
 				<StringInput placeholder="Enter game name..." buttonText="create" onSubmit={handleNameEntry} />
 			</div>
-			<BackButton setPage={() => setPage(Pages.HOME_PAGE)} />
+			<BackButton className="mt-5" setPage={() => setPage(Pages.HOME_PAGE)} />
 		</PageOutline>
 	);
 };

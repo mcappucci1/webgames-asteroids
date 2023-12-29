@@ -30,7 +30,6 @@ export const SetNamePage = ({ setPage }: PageProps) => {
 	const handleNameEntry = useCallback(
 		(name: string) => {
 			if (name.length === 0) {
-				console.log("test");
 				toast.error("Name must be non-empty.", TOAST_DISAPPEAR_OPTIONS);
 				return;
 			} else if (name.length > STRING_LENGTH_LIMIT) {

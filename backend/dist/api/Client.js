@@ -14,9 +14,7 @@ class Client {
     setNameHandler(data) {
         this.name = data.data;
         const responseData = {
-            data: {
-                name: this.name,
-            },
+            name: this.name,
         };
         this.sendMessage(true, undefined, Message_1.MessageType.SET_CLIENT_NAME, responseData);
     }
@@ -31,7 +29,7 @@ class Client {
             this.sendMessage(false, "Game could not be created.", Message_1.MessageType.CREATE_GAME, undefined);
             return;
         }
-        const responseData = { data: { name: data.data } };
+        const responseData = { name: data.data };
         this.sendMessage(true, undefined, Message_1.MessageType.CREATE_GAME, responseData);
     }
     addSelfGameHandler(data) {
@@ -51,7 +49,7 @@ class Client {
             this.sendMessage(false, "Failed to add client to game.", Message_1.MessageType.ADD_CLIENT_TO_GAME, undefined);
             return;
         }
-        const responseData = { data: { gameName: data.data.gameName } };
+        const responseData = { gameName: data.data.gameName };
         this.sendMessage(true, undefined, Message_1.MessageType.ADD_CLIENT_TO_GAME, responseData);
     }
     startGameHandler() {
@@ -67,12 +65,20 @@ class Client {
             return;
         }
         const gameData = this.game.getInfo();
-        const responseData = { data: gameData };
-        this.sendMessage(true, undefined, Message_1.MessageType.GET_GAME_INFO, responseData);
+        this.sendMessage(true, undefined, Message_1.MessageType.GET_GAME_INFO, gameData);
+    }
+    removeFromGameHandler() {
+        if (this.game != undefined) {
+            console.log("removing thing");
+            this.game.removeClient(this);
+        }
+        console.log("removing");
+        this.sendMessage(true, undefined, Message_1.MessageType.REMOVE_CLIENT_FROM_GAME, undefined);
     }
     route(rawData) {
         var _a;
         const msg = this.parseMessage(rawData);
+        console.log(msg);
         const { msgType, data } = msg;
         if (msgType === Message_1.MessageType.SET_CLIENT_NAME) {
             this.setNameHandler(data);
@@ -92,6 +98,9 @@ class Client {
         else if (msgType === Message_1.MessageType.GAME_DATA) {
             (_a = this.game) === null || _a === void 0 ? void 0 : _a.setShipData(data.data);
         }
+        else if (msgType === Message_1.MessageType.REMOVE_CLIENT_FROM_GAME) {
+            this.removeFromGameHandler();
+        }
     }
     setGame(game) {
         this.game = game;
@@ -100,7 +109,7 @@ class Client {
         const msgData = {
             data: { success, error, data },
         };
-        const response = new Message_1.Message(Message_1.MessageType.GET_GAME_INFO, msgData);
+        const response = new Message_1.Message(type, msgData);
         this.ws.send(JSON.stringify(response));
     }
     initializeListeners() {

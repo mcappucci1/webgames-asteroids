@@ -22,9 +22,7 @@ export class Client {
 	setNameHandler(data: MessageData) {
 		this.name = data.data;
 		const responseData = {
-			data: {
-				name: this.name,
-			},
+			name: this.name,
 		};
 		this.sendMessage(true, undefined, MessageType.SET_CLIENT_NAME, responseData);
 	}
@@ -43,7 +41,7 @@ export class Client {
 			return;
 		}
 
-		const responseData = { data: { name: data.data } };
+		const responseData = { name: data.data };
 		this.sendMessage(true, undefined, MessageType.CREATE_GAME, responseData);
 	}
 
@@ -67,7 +65,7 @@ export class Client {
 			return;
 		}
 
-		const responseData = { data: { gameName: data.data.gameName } };
+		const responseData = { gameName: data.data.gameName };
 		this.sendMessage(true, undefined, MessageType.ADD_CLIENT_TO_GAME, responseData);
 	}
 
@@ -85,8 +83,14 @@ export class Client {
 			return;
 		}
 		const gameData = this.game.getInfo();
-		const responseData = { data: gameData };
-		this.sendMessage(true, undefined, MessageType.GET_GAME_INFO, responseData);
+		this.sendMessage(true, undefined, MessageType.GET_GAME_INFO, gameData);
+	}
+
+	removeFromGameHandler() {
+		if (this.game != undefined) {
+			this.game.removeClient(this);
+		}
+		this.sendMessage(true, undefined, MessageType.REMOVE_CLIENT_FROM_GAME, undefined);
 	}
 
 	route(rawData: RawData) {
@@ -104,18 +108,20 @@ export class Client {
 			this.getGameInfoHandler();
 		} else if (msgType === MessageType.GAME_DATA) {
 			this.game?.setShipData(data.data);
+		} else if (msgType === MessageType.REMOVE_CLIENT_FROM_GAME) {
+			this.removeFromGameHandler();
 		}
 	}
 
-	setGame(game: Game) {
+	setGame(game: Game | undefined) {
 		this.game = game;
 	}
 
-	sendMessage(success: boolean, error: string | undefined, type: MessageType, data: MessageData | undefined) {
+	sendMessage(success: boolean, error: string | undefined, type: MessageType, data: Object | undefined) {
 		const msgData = {
 			data: { success, error, data },
 		};
-		const response = new Message(MessageType.GET_GAME_INFO, msgData);
+		const response = new Message(type, msgData);
 		this.ws.send(JSON.stringify(response));
 	}
 
