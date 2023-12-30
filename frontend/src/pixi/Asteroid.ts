@@ -49,8 +49,7 @@ export class Asteroid extends Entity {
 	private style: number;
 
 	constructor(scale: number, style: number, id: number) {
-		super(graphicPoints[style], id);
-		super.setScale(scale);
+		super(graphicPoints[style], id, undefined, undefined, scale);
 		this.style = style;
 		this.score = Math.round(scale ** 2 * 100);
 	}

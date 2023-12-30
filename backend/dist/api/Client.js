@@ -69,10 +69,8 @@ class Client {
     }
     removeFromGameHandler() {
         if (this.game != undefined) {
-            console.log("removing thing");
             this.game.removeClient(this);
         }
-        console.log("removing");
         this.sendMessage(true, undefined, Message_1.MessageType.REMOVE_CLIENT_FROM_GAME, undefined);
     }
     route(rawData) {
@@ -96,7 +94,7 @@ class Client {
             this.getGameInfoHandler();
         }
         else if (msgType === Message_1.MessageType.GAME_DATA) {
-            (_a = this.game) === null || _a === void 0 ? void 0 : _a.setShipData(data.data);
+            (_a = this.game) === null || _a === void 0 ? void 0 : _a.setShipData(data);
         }
         else if (msgType === Message_1.MessageType.REMOVE_CLIENT_FROM_GAME) {
             this.removeFromGameHandler();
@@ -112,8 +110,15 @@ class Client {
         const response = new Message_1.Message(type, msgData);
         this.ws.send(JSON.stringify(response));
     }
+    destroy() {
+        if (this.game) {
+            this.game.removeClient(this);
+        }
+    }
     initializeListeners() {
         this.ws.on("message", (rawData) => this.route(rawData));
+        this.ws.on("error", () => this.destroy());
+        this.ws.on("close", () => this.destroy());
     }
 }
 exports.Client = Client;

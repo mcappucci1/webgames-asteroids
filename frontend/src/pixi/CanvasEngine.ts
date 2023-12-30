@@ -33,4 +33,20 @@ export class CanvasEngine {
 	static clear() {
 		this.singleton.app.stage.removeChildren();
 	}
+
+	static setCanvasSize(height: number, width: number) {
+		if (this.singleton == null) {
+			return;
+		}
+		this.singleton.app.view.height = height;
+		this.singleton.app.view.width = width;
+	}
+
+	static setCanvasPosition(x: number, y: number) {
+		if (this.singleton == null) {
+			return;
+		}
+		this.singleton.app.view.style.top = `${y}px`;
+		this.singleton.app.view.style.left = `${x}px`;
+	}
 }

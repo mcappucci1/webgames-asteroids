@@ -22,7 +22,7 @@ export class WebSocketClient {
 	}
 
 	initializeWebsocket() {
-		this.ws = new WebSocket("ws://localhost:4000");
+		this.ws = new WebSocket(`ws://${window.location.hostname}:4000`);
 		this.ws.onopen = () => (this.ready = true);
 		this.ws.onmessage = (event: MessageEvent<any>) => this.receivedMessage(event.data);
 		this.ws.onerror = (ex) => {
@@ -121,15 +121,15 @@ export class WebSocketClient {
 		WebSocketClient.sendMessage(MessageType.GET_GAME_INFO, { data: WebSocketClient.singleton?.gameName }, cb);
 	}
 
-	static startGame() {
-		const msg = new Message(MessageType.START_GAME, { data: {} });
-		this.singleton?.ws?.send(JSON.stringify(msg));
+	static startGame(cb: Function) {
+		this.sendMessage(MessageType.START_GAME, { data: {} }, cb);
 	}
 
 	static setShipKeyDown(down: boolean, key: string, id: number) {
 		if (!WebSocketClient.singletonReady()) {
 			return;
 		}
-		WebSocketClient.sendMessage(MessageType.GAME_DATA, { data: { type: "ship", down, key, id } });
+		const data = { type: "ship", data: { action: "keypress", down, key, id } };
+		WebSocketClient.sendMessage(MessageType.GAME_DATA, data);
 	}
 }

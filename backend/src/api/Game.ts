@@ -1,5 +1,5 @@
 import { Client } from "./Client";
-import { MessageType } from "./Message";
+import { MessageType, MessageData } from "./Message";
 import { GameUtils } from "./GameUtils";
 import { AlienShip } from "./AlienShip";
 import { Ship } from "./Ship";
@@ -26,9 +26,9 @@ export class Game {
 		this.controller = controller;
 	}
 
-	setShipData(data: EntityGameData) {
+	setShipData(data: MessageData) {
 		for (const client of this.clients) {
-			client.sendMessage(true, undefined, MessageType.GAME_DATA, { data });
+			client.sendMessage(true, undefined, MessageType.GAME_DATA, data);
 		}
 	}
 
@@ -109,17 +109,20 @@ export class Game {
 	generateClientShips() {
 		const diff = 1 / (this.clients.length + 1);
 		const data = {
-			speed: 10,
-			position: [0, 1],
-			theta: Math.PI / 4,
-			moveEntity: [0, 1],
-			id: 0,
+			type: "ship",
+			data: {
+				speed: 10,
+				position: [0, 1],
+				theta: (3 * Math.PI) / 2,
+				moveEntity: [0, 1],
+				id: 0,
+			},
 		};
 
 		for (let i = 0; i < this.clients.length; ++i) {
 			this.ships.push(new Ship(i));
-			data.position[0] = diff * (i + 1);
-			data.id = i;
+			data.data.position[0] = diff * (i + 1);
+			data.data.id = i;
 			this.clients[i].sendMessage(true, undefined, MessageType.GAME_DATA, data);
 		}
 	}
@@ -137,7 +140,7 @@ export class Game {
 		this.generateClientShips();
 
 		setInterval(() => {
-			if (Math.random() < 0.05) {
+			if (Math.random() < 0) {
 				this.generateAlienShip();
 			}
 			this.generateAsteroids();

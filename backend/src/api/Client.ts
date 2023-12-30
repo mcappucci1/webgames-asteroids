@@ -95,6 +95,7 @@ export class Client {
 
 	route(rawData: RawData) {
 		const msg = this.parseMessage(rawData);
+		console.log(msg);
 		const { msgType, data } = msg;
 		if (msgType === MessageType.SET_CLIENT_NAME) {
 			this.setNameHandler(data);
@@ -107,7 +108,7 @@ export class Client {
 		} else if (msgType === MessageType.GET_GAME_INFO) {
 			this.getGameInfoHandler();
 		} else if (msgType === MessageType.GAME_DATA) {
-			this.game?.setShipData(data.data);
+			this.game?.setShipData(data);
 		} else if (msgType === MessageType.REMOVE_CLIENT_FROM_GAME) {
 			this.removeFromGameHandler();
 		}
@@ -125,7 +126,15 @@ export class Client {
 		this.ws.send(JSON.stringify(response));
 	}
 
+	destroy() {
+		if (this.game) {
+			this.game.removeClient(this);
+		}
+	}
+
 	initializeListeners() {
 		this.ws.on("message", (rawData: RawData) => this.route(rawData));
+		this.ws.on("error", () => this.destroy());
+		this.ws.on("close", () => this.destroy());
 	}
 }

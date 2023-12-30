@@ -13,4 +13,5 @@ export type EntityGameData = {
 	id: number;
 	down: boolean;
 	key: string;
+	action: string;
 };

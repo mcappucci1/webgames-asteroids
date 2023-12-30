@@ -26,14 +26,24 @@ export const GameLobbyPage = ({ setPage }: PageProps) => {
 		[setPage]
 	);
 
+	const handleStartGameCB = useCallback(
+		(data: MessageData) => {
+			if (data.data.success) {
+				setPage(Pages.PLAY_GAME);
+			} else {
+				toast.error("Could not start game.", TOAST_DISAPPEAR_OPTIONS);
+			}
+		},
+		[setPage]
+	);
+
 	const leaveGameCB = useCallback(() => {
 		WebSocketClient.removeClientFromGame(handleLeaveGameCB);
 	}, [handleLeaveGameCB]);
 
 	const startGameCB = useCallback(() => {
-		WebSocketClient.addMessageHandler(MessageType.GAME_DATA, () => setPage(Pages.PLAY_GAME));
-		WebSocketClient.startGame();
-	}, [setPage]);
+		WebSocketClient.startGame(handleStartGameCB);
+	}, [handleStartGameCB]);
 
 	const getGameDataCB = useCallback((data: MessageData) => {
 		if (data.data.success) {
@@ -44,10 +54,10 @@ export const GameLobbyPage = ({ setPage }: PageProps) => {
 
 	useEffect(() => {
 		if (gameInfo == null) {
-			WebSocketClient.addMessageHandler(MessageType.START_GAME, () => setPage(Pages.PLAY_GAME));
 			WebSocketClient.getGameInfo(getGameDataCB);
 		}
-	}, [gameInfo, setPage, getGameDataCB]);
+		WebSocketClient.addMessageHandler(MessageType.START_GAME, handleStartGameCB);
+	}, [gameInfo, setPage, getGameDataCB, handleStartGameCB]);
 
 	return (
 		<PageOutline title="Game Lobby">
