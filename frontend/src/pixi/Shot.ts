@@ -8,7 +8,7 @@ const geoData = [
 ];
 
 export class Shot extends Entity {
-	static speed: number = 6000;
+	static speed: number = 10;
 
 	constructor(id: number) {
 		super(geoData, id, false, true);

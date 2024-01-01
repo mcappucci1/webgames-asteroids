@@ -28,10 +28,10 @@ export class ClientGameEngine {
 		CanvasEngine.removeTickerCB(ClientGameEngine.updateCB);
 	}
 
-	static addShot(speed: number, theta: number, position: Array<number>) {
+	static addShot(theta: number, position: Array<number>) {
 		const shot = new Shot(0);
 		shot.setAngle(theta);
-		shot.setVelocity(speed);
+		shot.setVelocity(Shot.speed);
 		shot.setPosition(position[0], position[1]);
 		ClientGameEngine.singleton.shots.push(shot);
 		CanvasEngine.addChild(shot);
@@ -176,16 +176,15 @@ export class ClientGameEngine {
 			const { position, speed, theta, moveEntity } = data;
 			const ship = new Ship();
 			ship.setPosition(
-				0.5 * this.width + moveEntity[0] * ship.graphic.width,
-				0.5 * this.height + moveEntity[1] * ship.graphic.height
+				position[0] * this.width + moveEntity[0] * ship.graphic.width,
+				position[1] * this.height + moveEntity[1] * ship.graphic.height
 			);
 			ship.setAngle(theta);
+			ship.setRotation(theta);
 			ship.setVelocity(speed);
-			console.log(ship.getVelocity());
 			ship.addKeyPressListeners();
 			ClientGameEngine.singleton.ships.push(ship);
 			CanvasEngine.addChild(ship);
-			console.log(data);
 		}
 	}
 

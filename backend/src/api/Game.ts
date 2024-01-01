@@ -3,7 +3,6 @@ import { MessageType, MessageData } from "./Message";
 import { GameUtils } from "./GameUtils";
 import { AlienShip } from "./AlienShip";
 import { Ship } from "./Ship";
-import { EntityGameData } from "./EntityData";
 import { Controller } from "./Controller";
 
 export class Game {
@@ -111,7 +110,7 @@ export class Game {
 		const data = {
 			type: "ship",
 			data: {
-				speed: 10,
+				speed: 4,
 				position: [0, 1],
 				theta: (3 * Math.PI) / 2,
 				moveEntity: [0, 1],
@@ -140,7 +139,7 @@ export class Game {
 		this.generateClientShips();
 
 		setInterval(() => {
-			if (Math.random() < 0) {
+			if (Math.random() < 0.25) {
 				this.generateAlienShip();
 			}
 			this.generateAsteroids();

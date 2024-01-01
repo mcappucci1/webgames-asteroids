@@ -31,7 +31,7 @@ class GameUtils {
             startPoint = [0, Math.random()];
             moveEntity = [-1, 0];
         }
-        const speed = (0.5 + Math.random() ** 2 * 4) * 1000;
+        const speed = 0.5 + Math.random() ** 2 * 4;
         return { id: 0, startPoint, theta, moveEntity, speed };
     }
     static generateRandomAsteroid() {

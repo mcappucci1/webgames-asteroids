@@ -26,9 +26,10 @@ enum Direction {
 }
 
 export class Ship extends Entity {
-	static mass: number = 2000;
+	static mass: number = 1000;
 	static engineForce: number = 150;
-	static dragCoefficient: number = 1;
+	static dragCoefficient: number = 3;
+	static maxSpeed: number = 7;
 	public indestructible: boolean = false;
 	private thrusting: boolean = false;
 	private direction: Direction = Direction.None;
@@ -36,6 +37,11 @@ export class Ship extends Entity {
 
 	constructor() {
 		super(ship, 0);
+	}
+
+	setVelocity(speed: number) {
+		console.log(speed);
+		super.setVelocity(speed);
 	}
 
 	onKeydownEvent(key: string) {
@@ -63,7 +69,7 @@ export class Ship extends Entity {
 	}
 
 	createShot() {
-		ClientGameEngine.addShot(10, this.theta, [this.graphic.x, this.graphic.y]);
+		ClientGameEngine.addShot(this.theta, [this.graphic.x, this.graphic.y]);
 	}
 
 	startShoot() {
@@ -80,9 +86,18 @@ export class Ship extends Entity {
 	}
 
 	thrust(delta: number) {
+		if (this.getSpeed() >= Ship.maxSpeed) {
+			return;
+		}
 		const forwardAcceleration = (Ship.engineForce / Ship.mass) * Entity.screenMultiplier;
 		this.velocity[0] += forwardAcceleration * delta * Math.cos(this.graphic.rotation);
 		this.velocity[1] += forwardAcceleration * delta * Math.sin(this.graphic.rotation);
+		const vel = this.getSpeed();
+		if (vel > Ship.maxSpeed) {
+			const factor = Ship.maxSpeed / vel;
+			this.velocity[0] *= factor;
+			this.velocity[1] *= factor;
+		}
 	}
 
 	enableThrust() {

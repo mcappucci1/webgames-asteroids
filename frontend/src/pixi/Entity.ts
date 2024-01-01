@@ -82,10 +82,6 @@ export class Entity {
 		this.graphic.scale.set(scale * Entity.screenMultiplier);
 	}
 
-	getNormalizedVelocity() {
-		return Math.sqrt(this.velocity[0] ** 2 + this.velocity[1] ** 2);
-	}
-
 	getSize() {
 		return [this.graphic.width, this.graphic.height];
 	}
@@ -113,7 +109,7 @@ export class Entity {
 
 	setAngle(theta: number) {
 		this.theta = theta;
-		const normV = this.getNormalizedVelocity();
+		const normV = this.getSpeed();
 		this.velocity = [normV * Math.cos(theta), normV * Math.sin(theta)];
 	}
 
@@ -128,8 +124,8 @@ export class Entity {
 	}
 
 	move(delta: number) {
-		const x = this.graphic.x + (this.velocity[0] * delta) / 1000;
-		const y = this.graphic.y + (this.velocity[1] * delta) / 1000;
+		const x = this.graphic.x + this.velocity[0] * delta;
+		const y = this.graphic.y + this.velocity[1] * delta;
 		this.setPosition(x, y);
 	}
 
@@ -167,7 +163,7 @@ export class Entity {
 			const dot = new Entity(geoData, 0);
 			dot.setPosition(this.graphic.x, this.graphic.y);
 			dot.setAngle(this.theta + angle);
-			dot.setVelocity(25);
+			dot.setVelocity(0.025);
 			points.push(dot);
 			angle += (2 * Math.PI) / 9;
 			CanvasEngine.addChild(dot);
