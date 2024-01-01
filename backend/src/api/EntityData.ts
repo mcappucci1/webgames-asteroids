@@ -15,3 +15,8 @@ export type EntityGameData = {
 	key: string;
 	action: string;
 };
+
+export type ShipData = {
+	id: number;
+	lives: number;
+};

@@ -2,7 +2,7 @@ import { Client } from "./Client";
 import { MessageType, MessageData } from "./Message";
 import { GameUtils } from "./GameUtils";
 import { AlienShip } from "./AlienShip";
-import { Ship } from "./Ship";
+import { ShipData } from "./EntityData";
 import { Controller } from "./Controller";
 
 export class Game {
@@ -18,7 +18,7 @@ export class Game {
 	private alienId: number = 0;
 	private asteroidId: number = 0;
 	private alienShotId: number = 0;
-	private ships: Array<Ship> = [];
+	private ships: Array<ShipData> = [];
 
 	constructor(name: string, controller: Controller) {
 		this.name = name;
@@ -110,7 +110,7 @@ export class Game {
 		const data = {
 			type: "ship",
 			data: {
-				speed: 4,
+				speed: 2,
 				position: [0, 1],
 				theta: (3 * Math.PI) / 2,
 				moveEntity: [0, 1],
@@ -119,7 +119,7 @@ export class Game {
 		};
 
 		for (let i = 0; i < this.clients.length; ++i) {
-			this.ships.push(new Ship(i));
+			this.ships.push({ id: i, lives: 3 });
 			data.data.position[0] = diff * (i + 1);
 			data.data.id = i;
 			this.clients[i].sendMessage(true, undefined, MessageType.GAME_DATA, data);
