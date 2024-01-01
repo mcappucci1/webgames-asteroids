@@ -16,7 +16,7 @@ export class IdleScreenEngine {
 		const { startPoint, theta } = this.getRandomStart(asteroid);
 		asteroid.setPosition(startPoint[0], startPoint[1]);
 		asteroid.setAngle(theta);
-		asteroid.setVelocity(1 + 10 * Math.random() ** 2 * 0.35);
+		asteroid.setVelocity(0.5 + Math.random() ** 2 * 4);
 		this.asteroids.push(asteroid);
 		CanvasEngine.addChild(asteroid);
 	}
@@ -82,13 +82,15 @@ export class IdleScreenEngine {
 			return;
 		}
 		CanvasEngine.addTickerCB(IdleScreenEngine.moveAsteroidsCB);
+		IdleScreenEngine.singleton.started = true;
 	}
 
 	static stop() {
-		if (IdleScreenEngine.singleton.started) {
+		if (!IdleScreenEngine.singleton.started) {
 			return;
 		}
 		CanvasEngine.removeTickerCB(IdleScreenEngine.moveAsteroidsCB);
 		CanvasEngine.clear();
+		IdleScreenEngine.singleton.started = false;
 	}
 }

@@ -1,21 +1,15 @@
 import { WebSocket, WebSocketServer } from "ws";
-import { Router } from "./Router";
-import { Message, MessageType } from "./Message";
+import { Controller } from "./Controller";
 
 export class Server {
 	private server: WebSocketServer;
-	private router: Router;
+	private controller: Controller;
 
 	constructor(port: number) {
 		this.server = new WebSocketServer({ port });
-		this.router = new Router();
-		this.init();
-	}
-
-	init(): void {
+		this.controller = new Controller();
 		this.server.on("connection", (ws: WebSocket) => {
-			const msg = new Message(MessageType.CREATE_CLIENT, { data: ws });
-			this.router.route(msg);
+			this.controller.createClient(ws);
 		});
 	}
 }

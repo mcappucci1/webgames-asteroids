@@ -49,8 +49,7 @@ export class Asteroid extends Entity {
 	private style: number;
 
 	constructor(scale: number, style: number, id: number) {
-		super(graphicPoints[style], id);
-		super.setScale(scale);
+		super(graphicPoints[style], id, undefined, undefined, scale);
 		this.style = style;
 		this.score = Math.round(scale ** 2 * 100);
 	}
@@ -69,7 +68,7 @@ export class Asteroid extends Entity {
 		const splitAngle = 0.02 + (Math.random() * Math.PI) / 3;
 		const asteroids = [new Asteroid(newScale, this.style, 0), new Asteroid(newScale, this.style, 0)];
 		asteroids.forEach((asteroid, i) => {
-			asteroid.setVelocity(this.getNormalizedVelocity());
+			asteroid.setVelocity(this.getSpeed());
 			asteroid.setAngle(this.theta + splitAngle * (i === 1 ? -1 : 1));
 			asteroid.setPosition(this.graphic.x, this.graphic.y);
 		});

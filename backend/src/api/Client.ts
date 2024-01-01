@@ -1,6 +1,6 @@
 import { Controller } from "./Controller";
 import { WebSocket, RawData } from "ws";
-import { Message, MessageType } from "./Message";
+import { Message, MessageType, MessageData } from "./Message";
 import { Game } from "./Game";
 
 export class Client {
@@ -19,62 +19,122 @@ export class Client {
 		return JSON.parse(buf.toString()) as Message;
 	}
 
+	setNameHandler(data: MessageData) {
+		this.name = data.data;
+		const responseData = {
+			name: this.name,
+		};
+		this.sendMessage(true, undefined, MessageType.SET_CLIENT_NAME, responseData);
+	}
+
+	createGameHandler(data: MessageData) {
+		const game = this.controller.createGame(data);
+		if (game == null) {
+			this.sendMessage(false, "Game could not be created.", MessageType.CREATE_GAME, undefined);
+			return;
+		}
+
+		const success = this.controller.addClientToGame(data.data as string, this);
+
+		if (!success) {
+			this.sendMessage(false, "Game could not be created.", MessageType.CREATE_GAME, undefined);
+			return;
+		}
+
+		const responseData = { name: data.data };
+		this.sendMessage(true, undefined, MessageType.CREATE_GAME, responseData);
+	}
+
+	addSelfGameHandler(data: MessageData) {
+		let gameName = undefined;
+		try {
+			gameName = data.data.gameName;
+		} catch (ex) {
+			console.error(ex);
+		}
+
+		if (gameName == null) {
+			this.sendMessage(false, "Failed to add client to game.", MessageType.ADD_CLIENT_TO_GAME, undefined);
+			return;
+		}
+
+		const success = this.controller.addClientToGame(gameName, this);
+
+		if (!success) {
+			this.sendMessage(false, "Failed to add client to game.", MessageType.ADD_CLIENT_TO_GAME, undefined);
+			return;
+		}
+
+		const responseData = { gameName: data.data.gameName };
+		this.sendMessage(true, undefined, MessageType.ADD_CLIENT_TO_GAME, responseData);
+	}
+
+	startGameHandler() {
+		if (this.game == undefined) {
+			this.sendMessage(false, "Failed to start game.", MessageType.START_GAME, undefined);
+			return;
+		}
+		this.game.start();
+	}
+
+	getGameInfoHandler() {
+		if (this.game == null) {
+			this.sendMessage(true, "Client has no game.", MessageType.GET_GAME_INFO, undefined);
+			return;
+		}
+		const gameData = this.game.getInfo();
+		this.sendMessage(true, undefined, MessageType.GET_GAME_INFO, gameData);
+	}
+
+	removeFromGameHandler() {
+		if (this.game != undefined) {
+			this.game.removeClient(this);
+		}
+		this.sendMessage(true, undefined, MessageType.REMOVE_CLIENT_FROM_GAME, undefined);
+	}
+
 	route(rawData: RawData) {
 		const msg = this.parseMessage(rawData);
-		const { msgType, data } = msg;
 		console.log(msg);
+		const { msgType, data } = msg;
 		if (msgType === MessageType.SET_CLIENT_NAME) {
-			this.name = data.data;
-			const responseData = { data: { success: true, error: null, data: { name: this.name } } };
-			const response = new Message(MessageType.SET_CLIENT_NAME, responseData);
-			// TODO: Handle failure
-			this.sendMessage(response);
+			this.setNameHandler(data);
 		} else if (msgType === MessageType.CREATE_GAME) {
-			this.controller.routeClientMessage(msg);
-			const addClientData = {
-				data: {
-					gameName: data.data,
-					client: this,
-				},
-			};
-			// TODO: Handle failure
-			const addClientMsg = new Message(MessageType.ADD_CLIENT_TO_GAME, addClientData);
-			this.controller.routeClientMessage(addClientMsg);
-			const responseData = { data: { success: true, error: null, data: { name: data.data } } };
-			const response = new Message(MessageType.CREATE_GAME, responseData);
-			console.log(responseData);
-			this.sendMessage(response);
+			this.createGameHandler(data);
 		} else if (msgType === MessageType.ADD_CLIENT_TO_GAME) {
-			data.data.client = this;
-			console.log(data);
-			this.controller.routeClientMessage(msg);
-			console.log(this.game);
-			const responseData = { data: { success: true, error: null, data: { gameName: data.data.gameName } } };
-			const response = new Message(MessageType.ADD_CLIENT_TO_GAME, responseData);
-			console.log(response);
-			this.sendMessage(response);
+			this.addSelfGameHandler(data);
 		} else if (msgType === MessageType.START_GAME) {
-			this.game!.start();
+			this.startGameHandler();
 		} else if (msgType === MessageType.GET_GAME_INFO) {
-			const gameData = this.game?.getInfo();
-			const responseData = { data: { success: true, error: null, data: gameData } };
-			const response = new Message(MessageType.GET_GAME_INFO, responseData);
-			console.log(gameData);
-			this.sendMessage(response);
+			this.getGameInfoHandler();
 		} else if (msgType === MessageType.GAME_DATA) {
 			this.game?.setShipData(data);
+		} else if (msgType === MessageType.REMOVE_CLIENT_FROM_GAME) {
+			this.removeFromGameHandler();
 		}
 	}
 
-	setGame(game: Game) {
+	setGame(game: Game | undefined) {
 		this.game = game;
 	}
 
-	sendMessage(data: object) {
-		this.ws.send(JSON.stringify(data));
+	sendMessage(success: boolean, error: string | undefined, type: MessageType, data: Object | undefined) {
+		const msgData = {
+			data: { success, error, data },
+		};
+		const response = new Message(type, msgData);
+		this.ws.send(JSON.stringify(response));
+	}
+
+	destroy() {
+		if (this.game) {
+			this.game.removeClient(this);
+		}
 	}
 
 	initializeListeners() {
 		this.ws.on("message", (rawData: RawData) => this.route(rawData));
+		this.ws.on("error", () => this.destroy());
+		this.ws.on("close", () => this.destroy());
 	}
 }

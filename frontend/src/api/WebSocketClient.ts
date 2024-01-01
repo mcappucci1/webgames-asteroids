@@ -1,30 +1,47 @@
-import { Message, MessageType } from "../common/Message";
+import { Message, MessageType, MessageData } from "../common/Message";
 
 export class WebSocketClient {
-	static singleton: WebSocketClient = new WebSocketClient();
-	private ws: WebSocket;
-	private cbs: Map<MessageType, Array<Function>>;
+	static singleton: WebSocketClient | undefined = undefined;
+	static maxRetryCount: number = 3;
+	private retryCount: number = 0;
+	private ws: WebSocket | undefined;
+	private cbs: Map<MessageType, Function>;
 	private ready: boolean = false;
 	public name: string | undefined;
 	public gameName: string | undefined;
 
-	constructor() {
-		this.ws = new WebSocket("ws://localhost:4000");
+	constructor(cb: Function) {
+		this.ws = undefined;
 		this.cbs = new Map();
-		this.initializeWsListeners();
+		this.cbs.set(MessageType.CONNECTION_LOST, cb);
+		this.initializeWebsocket();
 	}
 
-	initializeWsListeners() {
-		this.ws.onopen = () => {
-			this.ready = true;
-		};
-		this.ws.onmessage = (event: MessageEvent<any>) => {
-			this.receivedMessage(event.data);
-		};
-		this.ws.onerror = () => {
-			console.log("error");
+	static initializeSingleton(cb: Function) {
+		this.singleton = new WebSocketClient(cb);
+	}
+
+	initializeWebsocket() {
+		this.ws = new WebSocket(`ws://${window.location.hostname}:4000`);
+		this.ws.onopen = () => (this.ready = true);
+		this.ws.onmessage = (event: MessageEvent<any>) => this.receivedMessage(event.data);
+		this.ws.onerror = (ex) => {
+			this.ready = false;
+			console.warn("Connecting to backend failed");
+			console.error(ex);
+			if (this.retryCount++ < WebSocketClient.maxRetryCount) {
+				console.warn(`Connection retry: (${this.retryCount}/${WebSocketClient.maxRetryCount})`);
+				this.initializeWebsocket();
+			} else {
+				const cb = this.cbs.get(MessageType.CONNECTION_LOST)!;
+				cb({ data: { success: false, error: "Client connection error occurred" } });
+			}
 		};
 		this.ws.onclose = () => {
+			if (this.ready) {
+				const cb = this.cbs.get(MessageType.CONNECTION_LOST)!;
+				cb({ data: { success: false, error: "Client connection error occurred" } });
+			}
 			this.ready = false;
 		};
 	}
@@ -32,112 +49,87 @@ export class WebSocketClient {
 	receivedMessage(msg: string) {
 		const parsedMsg = JSON.parse(msg) as Message;
 		const { msgType, data } = parsedMsg;
-		if (this.cbs.has(msgType)) {
-			const arr = this.cbs.get(msgType)!;
-			for (const cb of arr) {
-				cb(data);
-			}
-			//this.cbs.delete(msgType);
+		const cb = this.cbs.get(msgType);
+		if (cb != null) {
+			cb(data);
 		}
 	}
 
 	static addMessageHandler(msgType: MessageType, cb: Function) {
-		WebSocketClient.singleton.cbs.set(msgType, [cb]);
+		WebSocketClient.singleton?.cbs.set(msgType, cb);
+	}
+
+	static singletonReady() {
+		return WebSocketClient.singleton != null && this.singleton?.ws != null && this.singleton.ready;
+	}
+
+	static immediateError(err: string, type: MessageType, cb: Function) {
+		const responseData = { data: { success: false, error: err } };
+		const response = new Message(type, responseData);
+		setTimeout(() => cb(response), 0);
+	}
+
+	static sendMessage(type: MessageType, data: MessageData, cb?: Function) {
+		if (cb != null) {
+			this.singleton?.cbs.set(type, cb);
+		}
+		const msg = new Message(type, data);
+		this.singleton?.ws?.send(JSON.stringify(msg));
 	}
 
 	static submitClientName(name: string, cb: Function) {
-		if (WebSocketClient.singleton == null) {
-			const responseData = { data: { success: false, error: "Client not initialized" } };
-			const response = new Message(MessageType.SET_CLIENT_NAME, responseData);
-			cb(response);
+		if (!WebSocketClient.singletonReady()) {
+			WebSocketClient.immediateError("Client not initialized", MessageType.SET_CLIENT_NAME, cb);
 			return;
 		}
-		if (!this.singleton.cbs.has(MessageType.SET_CLIENT_NAME)) {
-			this.singleton.cbs.set(MessageType.SET_CLIENT_NAME, []);
+		WebSocketClient.sendMessage(MessageType.SET_CLIENT_NAME, { data: name }, cb);
+	}
+
+	static removeClientFromGame(cb: Function) {
+		if (!WebSocketClient.singletonReady() || this.singleton?.gameName == null) {
+			WebSocketClient.immediateError("Cannot disconnect from game", MessageType.REMOVE_CLIENT_FROM_GAME, cb);
+			return;
 		}
-		this.singleton.cbs.get(MessageType.SET_CLIENT_NAME)!.push(cb);
-		const msg = new Message(MessageType.SET_CLIENT_NAME, { data: name });
-		this.singleton.ws.send(JSON.stringify(msg));
+		WebSocketClient.sendMessage(MessageType.REMOVE_CLIENT_FROM_GAME, { data: undefined }, cb);
 	}
 
 	static createGame(name: string, cb: Function) {
-		if (WebSocketClient.singleton == null) {
-			const responseData = { data: { success: false, error: "Client not initialized" } };
-			const response = new Message(MessageType.CREATE_GAME, responseData);
-			cb(response);
+		if (!WebSocketClient.singletonReady()) {
+			WebSocketClient.immediateError("Client not initialized", MessageType.CREATE_GAME, cb);
 			return;
 		}
-		if (!this.singleton.cbs.has(MessageType.CREATE_GAME)) {
-			this.singleton.cbs.set(MessageType.CREATE_GAME, []);
-		}
-		this.singleton.cbs.get(MessageType.CREATE_GAME)!.push(cb);
-		const msg = new Message(MessageType.CREATE_GAME, { data: name });
-		this.singleton.ws.send(JSON.stringify(msg));
+		WebSocketClient.sendMessage(MessageType.CREATE_GAME, { data: name }, cb);
 	}
 
 	static joinGame(name: string, cb: Function) {
-		if (WebSocketClient.singleton == null) {
-			const responseData = { data: { success: false, error: "Client not initialized" } };
-			const response = new Message(MessageType.ADD_CLIENT_TO_GAME, responseData);
-			cb(response);
+		if (!WebSocketClient.singletonReady()) {
+			WebSocketClient.immediateError("Client not initialized", MessageType.ADD_CLIENT_TO_GAME, cb);
 			return;
-		} else if (!WebSocketClient.singleton.name) {
-			const responseData = {
-				data: {
-					success: false,
-					error: "Set client name",
-				},
-			};
-			const response = new Message(MessageType.ADD_CLIENT_TO_GAME, responseData);
-			cb(response);
+		} else if (!WebSocketClient.singleton?.name) {
+			WebSocketClient.immediateError("Client name not set", MessageType.ADD_CLIENT_TO_GAME, cb);
 			return;
 		}
-		if (!this.singleton.cbs.has(MessageType.ADD_CLIENT_TO_GAME)) {
-			this.singleton.cbs.set(MessageType.ADD_CLIENT_TO_GAME, []);
-		}
-		this.singleton.cbs.get(MessageType.ADD_CLIENT_TO_GAME)!.push(cb);
-		const msgData = {
-			data: {
-				gameName: name,
-			},
-		};
-		const msg = new Message(MessageType.ADD_CLIENT_TO_GAME, msgData);
-		this.singleton.ws.send(JSON.stringify(msg));
+		WebSocketClient.sendMessage(MessageType.ADD_CLIENT_TO_GAME, { data: { gameName: name } }, cb);
 	}
 
 	static getGameInfo(cb: Function) {
-		if (!WebSocketClient.singleton.ready || WebSocketClient.singleton.gameName == null) {
-			const responseData = { data: { success: false, error: "Client not initialized" } };
-			const response = new Message(MessageType.GET_GAME_INFO, responseData);
-			cb(response);
+		if (!WebSocketClient.singletonReady()) {
+			WebSocketClient.immediateError("Client not initialized", MessageType.GET_GAME_INFO, cb);
 			return;
 		}
-		if (!this.singleton.cbs.has(MessageType.GET_GAME_INFO)) {
-			this.singleton.cbs.set(MessageType.GET_GAME_INFO, []);
-		}
-		this.singleton.cbs.get(MessageType.GET_GAME_INFO)!.push(cb);
-		const msg = new Message(MessageType.GET_GAME_INFO, { data: WebSocketClient.singleton.gameName });
-		this.singleton.ws.send(JSON.stringify(msg));
+		this.singleton?.cbs.set(MessageType.GET_GAME_INFO, cb);
+		WebSocketClient.sendMessage(MessageType.GET_GAME_INFO, { data: WebSocketClient.singleton?.gameName }, cb);
 	}
 
-	static startGame() {
-		const msg = new Message(MessageType.START_GAME, { data: {} });
-		this.singleton.ws.send(JSON.stringify(msg));
+	static startGame(cb: Function) {
+		this.sendMessage(MessageType.START_GAME, { data: {} }, cb);
 	}
 
 	static setShipKeyDown(down: boolean, key: string, id: number) {
-		if (!WebSocketClient.singleton.ready || WebSocketClient.singleton.gameName == null) {
+		if (!WebSocketClient.singletonReady()) {
 			return;
 		}
-		const gameData = {
-			data: {
-				type: "ship",
-				down,
-				key,
-				id,
-			},
-		};
-		const msg = new Message(MessageType.GAME_DATA, gameData);
-		this.singleton.ws.send(JSON.stringify(msg));
+		const data = { type: "ship", data: { action: "keypress", down, key, id } };
+		WebSocketClient.sendMessage(MessageType.GAME_DATA, data);
 	}
 }

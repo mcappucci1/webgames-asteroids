@@ -61,6 +61,7 @@ class CollisionBody extends Graphics {
 }
 
 export class Entity {
+	static screenMultiplier: number = 1;
 	protected theta: number = 0;
 	public graphic: CollisionBody;
 	protected velocity: number[] = [0, 0];
@@ -68,14 +69,17 @@ export class Entity {
 	protected explosive: boolean;
 	public id: number;
 
-	constructor(graphicData: Array<IPointData>, id: number, explosive?: boolean, treatAsPoint?: boolean) {
+	constructor(
+		graphicData: Array<IPointData>,
+		id: number,
+		explosive?: boolean,
+		treatAsPoint?: boolean,
+		scale: number = 1
+	) {
 		this.graphic = new CollisionBody(graphicData, treatAsPoint);
 		this.explosive = explosive === undefined ? true : explosive;
 		this.id = id;
-	}
-
-	getNormalizedVelocity() {
-		return Math.sqrt(this.velocity[0] ** 2 + this.velocity[1] ** 2);
+		this.graphic.scale.set(scale * Entity.screenMultiplier);
 	}
 
 	getSize() {
@@ -90,6 +94,10 @@ export class Entity {
 		return this.velocity.map((e) => e);
 	}
 
+	getSpeed() {
+		return Math.sqrt(Math.pow(this.velocity[0], 2) + Math.pow(this.velocity[1], 2));
+	}
+
 	setScale(scale: number) {
 		this.graphic.scale.set(scale);
 	}
@@ -101,11 +109,12 @@ export class Entity {
 
 	setAngle(theta: number) {
 		this.theta = theta;
-		const normV = this.getNormalizedVelocity();
+		const normV = this.getSpeed();
 		this.velocity = [normV * Math.cos(theta), normV * Math.sin(theta)];
 	}
 
 	setVelocity(speed: number) {
+		speed *= Entity.screenMultiplier;
 		this.velocity = [speed * Math.cos(this.theta), speed * Math.sin(this.theta)];
 	}
 
@@ -115,8 +124,8 @@ export class Entity {
 	}
 
 	move(delta: number) {
-		const x = this.graphic.x + (this.velocity[0] * delta * window.innerWidth) / 1000;
-		const y = this.graphic.y + (this.velocity[1] * delta * window.innerHeight) / 1000;
+		const x = this.graphic.x + this.velocity[0] * delta;
+		const y = this.graphic.y + this.velocity[1] * delta;
 		this.setPosition(x, y);
 	}
 
@@ -154,7 +163,7 @@ export class Entity {
 			const dot = new Entity(geoData, 0);
 			dot.setPosition(this.graphic.x, this.graphic.y);
 			dot.setAngle(this.theta + angle);
-			dot.setVelocity(0.05);
+			dot.setVelocity(0.025);
 			points.push(dot);
 			angle += (2 * Math.PI) / 9;
 			CanvasEngine.addChild(dot);

@@ -1,32 +1,43 @@
-import { GameManager } from "./GameManager";
-import { ClientManager } from "./ClientManager";
 import { Client } from "./Client";
 import { WebSocket } from "ws";
-import { Message, MessageType } from "./Message";
+import { MessageData } from "./Message";
 import { Game } from "./Game";
 
 export class Controller {
-	private gameMgr: GameManager;
-	private clientMgr: ClientManager;
-
-	constructor() {
-		this.gameMgr = new GameManager();
-		this.clientMgr = new ClientManager();
-	}
+	private games: Map<String, Game> = new Map<String, Game>();
 
 	createClient(ws: WebSocket) {
-		const client = new Client(ws, this);
-		this.clientMgr.add(client);
+		new Client(ws, this);
 	}
 
-	routeClientMessage(msg: Message) {
-		const { msgType, data } = msg;
-		if (msgType === MessageType.CREATE_GAME) {
-			const game = new Game(data.data as string);
-			this.gameMgr.add(game);
-		} else if (msgType === MessageType.ADD_CLIENT_TO_GAME) {
-			const { gameName, client } = data.data;
-			this.gameMgr.addClientToGame(gameName, client);
+	createGame(data: MessageData): Game | undefined {
+		let name = undefined;
+		try {
+			name = data.data as string;
+		} catch (ex) {
+			console.error(ex);
 		}
+
+		if (name == null || this.games.has(name)) {
+			return undefined;
+		}
+
+		const game = new Game(name, this);
+		this.games.set(name, game);
+		return game;
+	}
+
+	removeGame(name: string) {
+		if (this.games.has(name)) {
+			this.games.delete(name);
+		}
+	}
+
+	addClientToGame(gameName: string, client: Client): boolean {
+		if (!this.games.has(gameName)) {
+			return false;
+		}
+		const game = this.games.get(gameName)!;
+		return game.addClient(client);
 	}
 }

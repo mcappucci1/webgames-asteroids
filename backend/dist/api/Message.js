@@ -17,4 +17,6 @@ var MessageType;
     MessageType[MessageType["START_GAME"] = 4] = "START_GAME";
     MessageType[MessageType["GET_GAME_INFO"] = 5] = "GET_GAME_INFO";
     MessageType[MessageType["GAME_DATA"] = 6] = "GAME_DATA";
+    MessageType[MessageType["CONNECTION_LOST"] = 7] = "CONNECTION_LOST";
+    MessageType[MessageType["REMOVE_CLIENT_FROM_GAME"] = 8] = "REMOVE_CLIENT_FROM_GAME";
 })(MessageType || (exports.MessageType = MessageType = {}));

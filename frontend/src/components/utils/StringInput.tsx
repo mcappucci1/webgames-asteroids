@@ -1,13 +1,13 @@
 import { useState } from "react";
-import "../../styles/CustomInput.css";
+import "../../styles/StringInput.css";
 
-interface CustomInputProps {
+interface StringInputProps {
 	placeholder: string;
 	buttonText: string;
 	onSubmit: (str: string) => void;
 }
 
-export const CustomInput = ({ placeholder, buttonText, onSubmit }: CustomInputProps) => {
+export const StringInput = ({ placeholder, buttonText, onSubmit }: StringInputProps) => {
 	const [value, setValue] = useState<string>("");
 	return (
 		<div className="d-inline-block">

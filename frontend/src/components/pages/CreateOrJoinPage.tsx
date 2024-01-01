@@ -1,5 +1,6 @@
 import { PageOutline, PageProps } from "../utils/PageOutline";
 import { Pages } from "../../common/Pages";
+import { BackButton } from "../utils/BackButton";
 
 export const CreateOrJoinPage = ({ setPage }: PageProps) => {
 	return (
@@ -25,6 +26,7 @@ export const CreateOrJoinPage = ({ setPage }: PageProps) => {
 					<h2 className="animate-underline">Create Game</h2>
 				</button>
 			</div>
+			<BackButton className="mt-5" setPage={() => setPage(Pages.SET_NAME_PAGE)} />
 		</PageOutline>
 	);
 };
