@@ -6,10 +6,12 @@ import { Entity } from "./Entity";
 import { AlienShip } from "./AlienShip";
 import { Shot } from "./Shot";
 import { Ship } from "./Ship";
+import { WebSocketClient } from "../api/WebSocketClient";
 
 export class ClientGameEngine {
 	static singleton: ClientGameEngine = new ClientGameEngine();
 	static updateCB: TickerCallback<null> = (dt: number) => this.singleton.update(dt);
+
 	private asteroids: Array<Asteroid> = [];
 	private alienShips: Array<AlienShip> = [];
 	private alienShots: Array<Shot> = [];
@@ -19,6 +21,16 @@ export class ClientGameEngine {
 	private width: number = 0;
 	private x: number = 0;
 	private y: number = 0;
+	private setLifeCB: Function | undefined;
+	private setScoreCB: Function | undefined;
+
+	static setSetLifeCB(cb: Function) {
+		this.singleton.setLifeCB = cb;
+	}
+
+	static setScoreCB(cb: Function) {
+		this.singleton.setScoreCB = cb;
+	}
 
 	static start() {
 		CanvasEngine.addTickerCB(ClientGameEngine.updateCB);
@@ -28,11 +40,12 @@ export class ClientGameEngine {
 		CanvasEngine.removeTickerCB(ClientGameEngine.updateCB);
 	}
 
-	static addShot(theta: number, position: Array<number>) {
+	static addShot(theta: number, position: Array<number>, color: number) {
 		const shot = new Shot(0);
 		shot.setAngle(theta);
 		shot.setVelocity(Shot.speed);
 		shot.setPosition(position[0], position[1]);
+		shot.setColor(color);
 		ClientGameEngine.singleton.shots.push(shot);
 		CanvasEngine.addChild(shot);
 	}
@@ -86,13 +99,11 @@ export class ClientGameEngine {
 		this.moveEntityArray(this.shots, dt);
 		this.detectCollisionsForEntityArray(this.asteroids, [this.shots, this.alienShots]);
 		this.detectCollisionsForEntityArray(this.alienShips, [this.shots]);
+		this.detectCollisionsForEntityArray(this.ships, [this.asteroids, this.alienShips, this.alienShots]);
 	}
 
-	destroyEntity(arr: Entity[], i: number, addScore: boolean) {
-		if (arr[i] instanceof Asteroid) {
-			const newAsteroids = (arr[i] as Asteroid).split();
-			arr.push(...newAsteroids);
-		}
+	destroyEntity(arr: Entity[], i: number) {
+		WebSocketClient.signalDestory(arr[i]);
 		arr[i].explode();
 		arr[i].destroy();
 		arr.splice(i, 1);
@@ -107,7 +118,7 @@ export class ClientGameEngine {
 				while (j < entityArr.length) {
 					if (targetArray[i].collision(entityArr[j])) {
 						destroy = true;
-						this.destroyEntity(entityArr, j, true);
+						this.destroyEntity(entityArr, j);
 						break;
 					}
 					++j;
@@ -115,7 +126,7 @@ export class ClientGameEngine {
 				if (destroy) break;
 			}
 			if (destroy) {
-				this.destroyEntity(targetArray, i, true);
+				this.destroyEntity(targetArray, i);
 			} else {
 				++i;
 			}
@@ -172,19 +183,27 @@ export class ClientGameEngine {
 			} else {
 				ship?.onKeyupEvent(key);
 			}
-		} else {
-			const { position, speed, theta, moveEntity } = data;
-			const ship = new Ship();
-			ship.setPosition(
-				position[0] * this.width + moveEntity[0] * ship.graphic.width,
-				position[1] * this.height + moveEntity[1] * ship.graphic.height
-			);
-			ship.setAngle(theta);
-			ship.setRotation(theta);
-			ship.setVelocity(speed);
-			ship.addKeyPressListeners();
-			ClientGameEngine.singleton.ships.push(ship);
-			CanvasEngine.addChild(ship);
+		} else if (action === "createShips") {
+			for (const shipData of data.ships) {
+				const { position, speed, theta, moveEntity, id, color } = shipData;
+				const ship = new Ship(id);
+				ship.setPosition(
+					position[0] * this.width + moveEntity[0] * ship.graphic.width,
+					position[1] * this.height + moveEntity[1] * ship.graphic.height
+				);
+				ship.setColor(color);
+				ship.setAngle(theta);
+				ship.setRotation(theta);
+				ship.setVelocity(speed);
+				if (id === WebSocketClient.getClientId()) {
+					ship.addKeyPressListeners();
+				}
+				this.ships.push(ship);
+				if (this.setLifeCB != null) {
+					this.setLifeCB(shipData);
+				}
+				CanvasEngine.addChild(ship);
+			}
 		}
 	}
 
@@ -198,6 +217,10 @@ export class ClientGameEngine {
 			this.singleton.alienShotHandler(data);
 		} else if (type === "ship") {
 			this.singleton.shipHandler(data);
+		} else if (type === "score") {
+			if (this.singleton.setScoreCB != null) {
+				this.singleton.setScoreCB(data);
+			}
 		}
 	}
 }

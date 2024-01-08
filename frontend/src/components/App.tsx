@@ -18,7 +18,6 @@ export function App() {
 
 	const showErrorToast = useCallback((data: MessageData) => {
 		if (!data.data.success) {
-			console.log("test");
 			toast.error("Cannot connect to backend. Refresh page.", TOAST_PERMANENT_OPTIONS);
 		}
 	}, []);

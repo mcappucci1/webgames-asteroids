@@ -1,4 +1,6 @@
 import { Message, MessageType, MessageData } from "../common/Message";
+import { ClientGameEngine } from "../pixi/ClientGameEngine";
+import { Entity } from "../pixi/Entity";
 
 export class WebSocketClient {
 	static singleton: WebSocketClient | undefined = undefined;
@@ -7,6 +9,7 @@ export class WebSocketClient {
 	private ws: WebSocket | undefined;
 	private cbs: Map<MessageType, Function>;
 	private ready: boolean = false;
+	private id: number | undefined;
 	public name: string | undefined;
 	public gameName: string | undefined;
 
@@ -14,11 +17,16 @@ export class WebSocketClient {
 		this.ws = undefined;
 		this.cbs = new Map();
 		this.cbs.set(MessageType.CONNECTION_LOST, cb);
+		this.cbs.set(MessageType.SET_CLIENT_ID, (data: MessageData) => (this.id = data.data.data.id));
 		this.initializeWebsocket();
 	}
 
 	static initializeSingleton(cb: Function) {
 		this.singleton = new WebSocketClient(cb);
+	}
+
+	static getClientId() {
+		return WebSocketClient.singleton?.id;
 	}
 
 	initializeWebsocket() {
@@ -129,7 +137,23 @@ export class WebSocketClient {
 		if (!WebSocketClient.singletonReady()) {
 			return;
 		}
-		const data = { type: "ship", data: { action: "keypress", down, key, id } };
+		const data = { data: { type: "ship", data: { action: "keypress", down, key, id } } };
+		WebSocketClient.sendMessage(MessageType.GAME_DATA, data);
+	}
+
+	static signalDestory(entity: Entity) {
+		if (!WebSocketClient.singletonReady()) {
+			return;
+		}
+		const { id, graphic } = entity;
+		const [width, height] = ClientGameEngine.getSize();
+		const data = {
+			data: {
+				type: "destroy",
+				id,
+				location: [graphic.x / width, graphic.y / height],
+			},
+		};
 		WebSocketClient.sendMessage(MessageType.GAME_DATA, data);
 	}
 }

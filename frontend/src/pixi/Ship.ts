@@ -35,12 +35,11 @@ export class Ship extends Entity {
 	private direction: Direction = Direction.None;
 	private shootInterval: NodeJS.Timer | undefined;
 
-	constructor() {
-		super(ship, 0);
+	constructor(id: number) {
+		super(ship, id);
 	}
 
 	setVelocity(speed: number) {
-		console.log(speed);
 		super.setVelocity(speed);
 	}
 
@@ -69,7 +68,7 @@ export class Ship extends Entity {
 	}
 
 	createShot() {
-		ClientGameEngine.addShot(this.theta, [this.graphic.x, this.graphic.y]);
+		ClientGameEngine.addShot(this.theta, [this.graphic.x, this.graphic.y], this.graphic.tint as number);
 	}
 
 	startShoot() {

@@ -1,5 +1,9 @@
-export class AlienShip {
+import { Entity } from "./Entity";
+
+export class AlienShip implements Entity {
 	public id: number;
+	public score = 50;
+	public split = false;
 	private shotTimer: NodeJS.Timeout;
 
 	constructor(id: number, shotCB: Function) {

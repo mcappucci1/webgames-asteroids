@@ -1,4 +1,4 @@
-import { Application, TickerCallback } from "pixi.js";
+import { Application, TickerCallback, Text } from "pixi.js";
 import { Entity } from "./Entity";
 
 export class CanvasEngine {
@@ -28,6 +28,10 @@ export class CanvasEngine {
 
 	static addChild(entity: Entity) {
 		CanvasEngine.singleton.app.stage.addChild(entity.graphic);
+	}
+
+	static addChildText(text: Text) {
+		CanvasEngine.singleton.app.stage.addChild(text);
 	}
 
 	static clear() {

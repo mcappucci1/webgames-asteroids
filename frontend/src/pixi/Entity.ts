@@ -4,7 +4,7 @@ import { CanvasEngine } from "./CanvasEngine";
 
 const lineStyle: ILineStyleOptions = {
 	width: 4,
-	color: 0xc0ecff,
+	color: 0xffffff,
 };
 
 class CollisionBody extends Graphics {
@@ -18,6 +18,7 @@ class CollisionBody extends Graphics {
 		this.pivot.set(this.width / 2, this.height / 2);
 		this.data = graphicData;
 		this.treatAsPoint = treatAsPoint === undefined ? false : treatAsPoint;
+		this.tint = 0xc0ecff;
 	}
 
 	intersectsAABB(body: CollisionBody) {
@@ -80,6 +81,10 @@ export class Entity {
 		this.explosive = explosive === undefined ? true : explosive;
 		this.id = id;
 		this.graphic.scale.set(scale * Entity.screenMultiplier);
+	}
+
+	setColor(color: number) {
+		this.graphic.tint = color;
 	}
 
 	getSize() {

@@ -7,12 +7,19 @@ export class Client {
 	private ws: WebSocket;
 	private controller: Controller;
 	private game: Game | undefined;
+	private id: number;
 	public name: string | undefined;
 
 	constructor(ws: WebSocket, controller: Controller) {
+		this.id = Math.floor(Math.random() * Math.floor(Math.random() * Date.now()));
 		this.ws = ws;
 		this.controller = controller;
 		this.initializeListeners();
+		this.sendMessage(true, undefined, MessageType.SET_CLIENT_ID, { id: this.id });
+	}
+
+	getId() {
+		return this.id;
 	}
 
 	parseMessage(buf: RawData): Message {
@@ -95,7 +102,6 @@ export class Client {
 
 	route(rawData: RawData) {
 		const msg = this.parseMessage(rawData);
-		console.log(msg);
 		const { msgType, data } = msg;
 		if (msgType === MessageType.SET_CLIENT_NAME) {
 			this.setNameHandler(data);
@@ -108,7 +114,7 @@ export class Client {
 		} else if (msgType === MessageType.GET_GAME_INFO) {
 			this.getGameInfoHandler();
 		} else if (msgType === MessageType.GAME_DATA) {
-			this.game?.setShipData(data);
+			this.game?.gameDataMsgHandler(data);
 		} else if (msgType === MessageType.REMOVE_CLIENT_FROM_GAME) {
 			this.removeFromGameHandler();
 		}
