@@ -8,15 +8,3 @@ export type EntityData = {
 	style?: number;
 	shipId?: number;
 };
-
-export type EntityGameData = {
-	id: number;
-	down: boolean;
-	key: string;
-	action: string;
-};
-
-export type ShipData = {
-	id: number;
-	lives: number;
-};

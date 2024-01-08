@@ -1,6 +1,4 @@
 import { Entity } from "./Entity";
-import { Shot } from "./Shot";
-import { GameEngine } from "./GameEngine";
 
 const alienShip = [
 	{ x: 0, y: 0 },
@@ -20,13 +18,6 @@ export class AlienShip extends Entity {
 
 	constructor(id: number) {
 		super(alienShip, id);
-		this.shootInterval = setInterval(() => {
-			const shot = new Shot(0);
-			shot.setAngle(Math.PI * 2 * Math.random());
-			shot.setVelocity(0.75);
-			shot.setPosition(this.graphic.x, this.graphic.y);
-			GameEngine.alienShots.push(shot);
-		}, 1000);
 		this.score = 500;
 	}
 

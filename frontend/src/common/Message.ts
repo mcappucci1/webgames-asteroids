@@ -18,6 +18,7 @@ export enum MessageType {
 	GAME_DATA,
 	CONNECTION_LOST,
 	REMOVE_CLIENT_FROM_GAME,
+	SET_CLIENT_ID,
 }
 
 export type MessageData = {

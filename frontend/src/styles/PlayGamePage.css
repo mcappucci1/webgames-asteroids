@@ -1,3 +1,4 @@
 #game-board {
 	border: 5px solid #c0ecff;
+	z-index: 100;
 }

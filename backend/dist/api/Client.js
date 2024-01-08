@@ -4,9 +4,14 @@ exports.Client = void 0;
 const Message_1 = require("./Message");
 class Client {
     constructor(ws, controller) {
+        this.id = Math.floor(Math.random() * Math.floor(Math.random() * Date.now()));
         this.ws = ws;
         this.controller = controller;
         this.initializeListeners();
+        this.sendMessage(true, undefined, Message_1.MessageType.SET_CLIENT_ID, { id: this.id });
+    }
+    getId() {
+        return this.id;
     }
     parseMessage(buf) {
         return JSON.parse(buf.toString());
@@ -76,7 +81,6 @@ class Client {
     route(rawData) {
         var _a;
         const msg = this.parseMessage(rawData);
-        console.log(msg);
         const { msgType, data } = msg;
         if (msgType === Message_1.MessageType.SET_CLIENT_NAME) {
             this.setNameHandler(data);
@@ -94,7 +98,7 @@ class Client {
             this.getGameInfoHandler();
         }
         else if (msgType === Message_1.MessageType.GAME_DATA) {
-            (_a = this.game) === null || _a === void 0 ? void 0 : _a.setShipData(data);
+            (_a = this.game) === null || _a === void 0 ? void 0 : _a.gameDataMsgHandler(data);
         }
         else if (msgType === Message_1.MessageType.REMOVE_CLIENT_FROM_GAME) {
             this.removeFromGameHandler();

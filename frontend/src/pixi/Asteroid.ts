@@ -51,7 +51,6 @@ export class Asteroid extends Entity {
 	constructor(scale: number, style: number, id: number) {
 		super(graphicPoints[style], id, undefined, undefined, scale);
 		this.style = style;
-		this.score = Math.round(scale ** 2 * 100);
 	}
 
 	static generateRandomAsteroid() {
