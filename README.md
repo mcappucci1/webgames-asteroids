@@ -15,7 +15,7 @@ Users can create or join games of up to six players, then fly around destroying 
 
 ### Option 1: AWS Cloud Deployment
 
-Play the game by going to http://asteroidsgames.com
+Play the game by going to http://asteroidsgames.com:3000
 
 `IMPORTANT NOTE:` To save money, I do not run this deployment all the time. It is only up 9am - 5pm, monday through friday.
 
