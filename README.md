@@ -1,21 +1,44 @@
 # Multiplayer Asteroids
 
-**Insert image of the landing page**
+<br />
+<img src="./images/homepage.jpg" height="400px" />
 
 ## Overview
 
-This repository is the code base for a multiplayer version of asteroids that runs in browser. The game allows you to create a profile, create a game, and invite other members to play.
+This project implements a multiplayer version of Atari asteroids using React, TypeScript, and Node.js.
 
-**Insert image of the game**
+Users can create or join games of up to six players, then fly around destroying asteroids and alien ships together.
 
-## Features
+<img src="./images/gameplay.jpg" height="400px" />
 
--   People enter a name
--   People either create or join a game
--   Invite players to game
--   Start game
--   End game splash page
+## How to Play the Game
 
--   Server
--   Game
--   Client
+### Option 1: AWS Cloud Deployment
+
+Play the game by going to http://asteroidsgames.com
+
+`IMPORTANT NOTE:` To save money, I do not run this deployment all the time. It is only up 9am - 5pm, monday through friday.
+
+### Option 2: Local Setup
+
+To run this project locally, do thse following:
+
+1. Clone this repo
+2. cd into `webgames-asteroids`
+3. To run in docker containers...
+    1. cd into `frontend` directory
+    2. Run: `docker build --no-cache -f Dockerfile -t asteroids-frontend:latest .`
+    3. Run: `docker run -d -p 3000:3000 --name asteroids-frontend asteroids-frontend:latest`
+    4. Open a new terminal
+    5. cd into `/webgames-asteroids/backend` directory
+    6. Run: `docker build --no-cache -f Dockerfile -t asteroids-backend:latest .`
+    7. Run: `docker run -d -p 4000:4000 --name asteroids-backend asteroids-backend:latest`
+    8. Wait a couple seconds and you're ready to rock and role
+4. To run natively...
+    1. cd into `frontend` directory
+    2. Run: `npm install`
+    3. Run: `npm start`
+    4. Open a new terminal
+    5. cd into `/webgames-asteroids/backend` directory
+    6. Run: `npm install`
+    7. Run: `npm test`
