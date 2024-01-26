@@ -45,6 +45,7 @@ jobs:
           USERNAME: ${{ secrets.USERNAME }}
         run: |
           cd ./backend
+          docker run --privileged --rm tonistiigi/binfmt --install all
           docker build --no-cache --platform=linux/arm64 -f Dockerfile -t backend:latest .
           docker save backend:latest > backend.tar
           base64 -d <<< $SSH_KEY > key.pem
