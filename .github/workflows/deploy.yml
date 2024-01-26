@@ -17,7 +17,7 @@ jobs:
           USERNAME: ${{ secrets.USERNAME }}
         run: |
           cd ./frontend
-          docker build --no-cache --platform=linux/arm64 -f Dockerfile -t frontend:latest .
+          docker build --no-cache -f Dockerfile -t frontend:latest .
           docker save frontend:latest > frontend.tar
           base64 -d <<< $SSH_KEY > key.pem
           chmod 600 key.pem
