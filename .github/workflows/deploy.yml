@@ -22,8 +22,8 @@ jobs:
           docker save frontend:latest > frontend.tar
           echo "${{ secrets.SSH_KEY }}" > key.pem
           chmod 600 key.pem
-          scp -o StrictHostKeyChecking=no -i key.pem ./frontend.tar $USERNAME@$HOSTNAME:~
-          ssh -o StrictHostKeyChecking=no -i key.pem $USERNAME@$HOSTNAME "
+          scp -o StrictHostKeyChecking=no -i key.pem -P 500 ./frontend.tar $USERNAME@$HOSTNAME:~
+          ssh -o StrictHostKeyChecking=no -i key.pem -p 500 $USERNAME@$HOSTNAME
             cd ~
             sudo docker stop frontend
             sudo docker rm frontend
@@ -50,8 +50,8 @@ jobs:
           docker save backend:latest > backend.tar
           echo "${{ secrets.SSH_KEY }}" > key.pem
           chmod 600 key.pem
-          scp -o StrictHostKeyChecking=no -i key.pem ./backend.tar $USERNAME@$HOSTNAME:~
-          ssh -o StrictHostKeyChecking=no -i key.pem $USERNAME@$HOSTNAME "
+          scp -o StrictHostKeyChecking=no -i key.pem -P 500 ./frontend.tar $USERNAME@$HOSTNAME:~
+          ssh -o StrictHostKeyChecking=no -i key.pem -p 500 $USERNAME@$HOSTNAME
             cd ~
             sudo docker stop backend
             sudo docker rm backend
