@@ -20,7 +20,7 @@ jobs:
           docker run --privileged --rm tonistiigi/binfmt --install all
           docker build --no-cache --platform=linux/arm64 -f Dockerfile -t frontend:latest .
           docker save frontend:latest > frontend.tar
-          echo $SSH_KEY | base64 -d > key.pem
+          echo "$SSH_KEY" | base64 -d > key.pem
           chmod 600 key.pem
           scp -o StrictHostKeyChecking=no -i key.pem ./frontend.tar $USERNAME@$HOSTNAME:~
           ssh -o StrictHostKeyChecking=no -i key.pem $USERNAME@$HOSTNAME "
@@ -48,7 +48,7 @@ jobs:
           docker run --privileged --rm tonistiigi/binfmt --install all
           docker build --no-cache --platform=linux/arm64 -f Dockerfile -t backend:latest .
           docker save backend:latest > backend.tar
-          base64 -d <<< $SSH_KEY > key.pem
+          echo "$SSH_KEY" | base64 -d > key.pem
           chmod 600 key.pem
           scp -o StrictHostKeyChecking=no -i key.pem ./backend.tar $USERNAME@$HOSTNAME:~
           ssh -o StrictHostKeyChecking=no -i key.pem $USERNAME@$HOSTNAME "
