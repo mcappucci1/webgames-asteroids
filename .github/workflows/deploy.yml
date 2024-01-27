@@ -23,11 +23,8 @@ jobs:
           echo "$SSH_KEY" > key.pem
           chmod 600 key.pem
           scp -o StrictHostKeyChecking=no -i key.pem -P 500 ./frontend.tar $USERNAME@$HOSTNAME:~
-          ssh -o StrictHostKeyChecking=no -i key.pem -p 500 $USERNAME@$HOSTNAME
+          ssh -o StrictHostKeyChecking=no -i key.pem -p 500 $USERNAME@$HOSTNAME "
             cd ~
-            ls
-            pwd
-            sudo docker ps
             sudo docker stop frontend
             sudo docker rm frontend
             sudo docker rmi frontend:latest
@@ -54,8 +51,11 @@ jobs:
           echo "$SSH_KEY" > key.pem
           chmod 600 key.pem
           scp -o StrictHostKeyChecking=no -i key.pem -P 500 ./backend.tar $USERNAME@$HOSTNAME:~
-          ssh -o StrictHostKeyChecking=no -i key.pem -p 500 $USERNAME@$HOSTNAME
+          ssh -o StrictHostKeyChecking=no -i key.pem -p 500 $USERNAME@$HOSTNAME "
             cd ~
+            sudo docker stop backend
+            sudo docker rm backend
+            sudo docker rmi backend:latest
             sudo chmod 777 backend.tar
             sudo docker load -i backend.tar
             sudo docker run -d -p 4000:4000 --name backend --restart unless-stopped backend:latest
