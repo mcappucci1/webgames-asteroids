@@ -19,8 +19,6 @@ export class ClientGameEngine {
 	private shots: Array<Shot> = [];
 	private height: number = 0;
 	private width: number = 0;
-	private x: number = 0;
-	private y: number = 0;
 	private setLifeCB: Function | undefined;
 	private setScoreCB: Function | undefined;
 
@@ -57,8 +55,6 @@ export class ClientGameEngine {
 	}
 
 	static setBoardPosition(x: number, y: number) {
-		this.singleton.x = x;
-		this.singleton.y = y;
 		CanvasEngine.setCanvasPosition(x, y);
 	}
 
@@ -66,12 +62,12 @@ export class ClientGameEngine {
 		return [ClientGameEngine.singleton.width, ClientGameEngine.singleton.height];
 	}
 
-	moveEntityArray(arr: Entity[], delta: number) {
+	moveEntityArray(arr: Entity[], delta: number, removeOutOfBounds = true) {
 		let i = 0;
 		while (i < arr.length) {
 			const entity = arr[i];
 			entity.move(delta);
-			if (this.entityOutOfBounds(entity)) {
+			if (removeOutOfBounds && this.entityOutOfBounds(entity)) {
 				entity.destroy();
 				arr.splice(i, 1);
 			} else {
@@ -95,7 +91,7 @@ export class ClientGameEngine {
 		this.moveEntityArray(this.asteroids, dt);
 		this.moveEntityArray(this.alienShips, dt);
 		this.moveEntityArray(this.alienShots, dt);
-		this.moveEntityArray(this.ships, dt);
+		this.moveEntityArray(this.ships, dt, false);
 		this.moveEntityArray(this.shots, dt);
 		this.detectCollisionsForEntityArray(this.asteroids, [this.shots, this.alienShots]);
 		this.detectCollisionsForEntityArray(this.alienShips, [this.shots]);

@@ -85,18 +85,9 @@ export class Ship extends Entity {
 	}
 
 	thrust(delta: number) {
-		if (this.getSpeed() >= Ship.maxSpeed) {
-			return;
-		}
-		const forwardAcceleration = (Ship.engineForce / Ship.mass) * Entity.screenMultiplier;
-		this.velocity[0] += forwardAcceleration * delta * Math.cos(this.graphic.rotation);
-		this.velocity[1] += forwardAcceleration * delta * Math.sin(this.graphic.rotation);
-		const vel = this.getSpeed();
-		if (vel > Ship.maxSpeed) {
-			const factor = Ship.maxSpeed / vel;
-			this.velocity[0] *= factor;
-			this.velocity[1] *= factor;
-		}
+		const a = Ship.engineForce / Ship.mass;
+		this.velocity[0] += a * delta * Math.cos(this.graphic.rotation) * Entity.screenMultiplier;
+		this.velocity[1] += a * delta * Math.sin(this.graphic.rotation) * Entity.screenMultiplier;
 	}
 
 	enableThrust() {
@@ -125,8 +116,7 @@ export class Ship extends Entity {
 		const fy = Ship.dragCoefficient * Math.abs(this.velocity[1]);
 		this.velocity[1] -= (fy / Ship.mass) * delta * (this.velocity[1] < 0 ? -1 : 1);
 
-		this.graphic.x += this.velocity[0] * delta;
-		this.graphic.y += this.velocity[1] * delta;
+		super.move(delta);
 
 		const bounds = this.graphic.getBounds();
 		const [w, h] = ClientGameEngine.getSize();
@@ -156,7 +146,6 @@ export class Ship extends Entity {
 		if (repeat) {
 			return;
 		}
-		console.log("send");
 		const invalidKey =
 			key !== "ArrowRight" && key !== "ArrowLeft" && key !== "ArrowDown" && key !== "ArrowUp" && key !== "s";
 		if (invalidKey) {
