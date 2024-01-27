@@ -4,8 +4,8 @@ docker build --no-cache --platform=linux/arm64 -f Dockerfile -t $1:latest .
 docker save $1:latest -o $1.tar
 echo "$SSH_KEY" > key.pem
 chmod 600 key.pem
-scp -o StrictHostKeyChecking=no -i key.pem -P 500 ./$1.tar $USERNAME@$HOSTNAME:~
-ssh -o StrictHostKeyChecking=no -i key.pem -p 500 $USERNAME@$HOSTNAME "
+scp -o StrictHostKeyChecking=no -i key.pem -P $SSH_PORT ./$1.tar $USERNAME@$HOSTNAME:~
+ssh -o StrictHostKeyChecking=no -i key.pem -p $SSH_PORT $USERNAME@$HOSTNAME "
     cd ~
     sudo docker stop $1
     sudo docker rm $1
