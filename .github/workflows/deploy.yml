@@ -1,62 +1,32 @@
-name: 'deploy'
+name: "deploy"
 
 on:
-  push:
-    branches:
-      - main
+    push:
+        branches:
+            - main
+    workflow_dispatch:
 
 jobs:
-  deploy-frontend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - env:
-          SSH_KEY: ${{ secrets.SSH_KEY }}
-          HOSTNAME: ${{ secrets.HOSTNAME }}
-          USERNAME: ${{ secrets.USERNAME }}
-        run: |
-          cd ./frontend
-          docker build --no-cache --platform=linux/arm64 -f Dockerfile -t frontend:latest .
-          docker save frontend:latest > frontend.tar
-          base64 -d <<< $SSH_KEY > key.pem
-          chmod 600 key.pem
-          scp -o StrictHostKeyChecking=no -i key.pem ./frontend.tar $USERNAME@$HOSTNAME:~
-          ssh -o StrictHostKeyChecking=no -i key.pem $USERNAME@$HOSTNAME "
-            cd ~
-            sudo docker stop frontend
-            sudo docker rm frontend
-            sudo docker rmi frontend:latest
-            sudo chmod 777 frontend.tar
-            sudo docker load < frontend.tar
-            sudo docker run -d -p 3000:3000 --name frontend --restart unless-stopped frontend:latest
-            sudo rm -f ./frontend.tar
-          "
-          rm -f key.pem
-          rm -f ./frontend.tar
-  deploy-backend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - env:
-          SSH_KEY: ${{ secrets.SSH_KEY }}
-          HOSTNAME: ${{ secrets.HOSTNAME }}
-          USERNAME: ${{ secrets.USERNAME }}
-        run: |
-          cd ./backend
-          docker build --no-cache --platform=linux/arm64 -f Dockerfile -t backend:latest .
-          docker save backend:latest > backend.tar
-          base64 -d <<< $SSH_KEY > key.pem
-          chmod 600 key.pem
-          scp -o StrictHostKeyChecking=no -i key.pem ./backend.tar $USERNAME@$HOSTNAME:~
-          ssh -o StrictHostKeyChecking=no -i key.pem $USERNAME@$HOSTNAME "
-            cd ~
-            sudo docker stop backend
-            sudo docker rm backend
-            sudo docker rmi backend:latest
-            sudo chmod 777 backend.tar
-            sudo docker load < backend.tar
-            sudo docker run -d -p 4000:4000 --name backend --restart unless-stopped backend:latest
-            sudo rm -f ./backend.tar
-          "
-          rm -f key.pem
-          rm -f ./backend.tar
+    deploy-frontend:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - env:
+                  SSH_KEY: ${{ secrets.SSH_KEY }}
+                  HOSTNAME: ${{ secrets.HOSTNAME }}
+                  USERNAME: ${{ secrets.USERNAME }}
+              run: |
+                  sudo chmod 777 ./scripts/deploy.sh
+                  ./scripts/deploy.sh frontend
+    deploy-backend:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - env:
+                  SSH_KEY: ${{ secrets.SSH_KEY }}
+                  SSH_PORT: ${{ secrets.SSH_PORT }}
+                  HOSTNAME: ${{ secrets.HOSTNAME }}
+                  USERNAME: ${{ secrets.USERNAME }}
+              run: |
+                  sudo chmod 777 ./scripts/deploy.sh
+                  ./scripts/deploy.sh backend
