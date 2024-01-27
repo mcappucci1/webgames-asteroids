@@ -22,7 +22,7 @@ export class Asteroid implements Entity {
 	}
 
 	canSplit() {
-		return this.splitCount < Asteroid.maxSplit - 0.0001;
+		return Asteroid.maxSplit - this.splitCount > 0.5;
 	}
 
 	splitEntity(location: number[]): EntityData[] {

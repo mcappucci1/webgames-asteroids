@@ -32,7 +32,7 @@ export class Game {
 		}
 	}
 
-	destoryHandler(data: any) {
+	destroyHandler(data: any) {
 		const { id } = data;
 		const entity = this.entityIds.get(id);
 		if (entity == null) {
@@ -90,7 +90,7 @@ export class Game {
 		if (type === "ship") {
 			this.shipHandler(data.data);
 		} else if (type === "destroy") {
-			this.destoryHandler(data.data);
+			this.destroyHandler(data.data);
 		}
 	}
 
@@ -221,7 +221,7 @@ export class Game {
 		this.generateClientShips();
 
 		setInterval(() => {
-			if (Math.random() < 0.05) {
+			if (Math.random() < 0.25) {
 				this.generateAlienShip();
 			}
 			this.generateAsteroids();

@@ -94,7 +94,7 @@ export class ClientGameEngine {
 		this.moveEntityArray(this.ships, dt, false);
 		this.moveEntityArray(this.shots, dt);
 		this.detectCollisionsForEntityArray(this.asteroids, [this.shots, this.alienShots]);
-		this.detectCollisionsForEntityArray(this.alienShips, [this.shots]);
+		this.detectCollisionsForEntityArray(this.alienShips, [this.shots, this.asteroids]);
 		this.detectCollisionsForEntityArray(this.ships, [this.asteroids, this.alienShips, this.alienShots]);
 	}
 
