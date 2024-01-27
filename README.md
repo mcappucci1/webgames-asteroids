@@ -13,11 +13,9 @@ Users can create or join games of up to six players, then fly around destroying 
 
 ## How to Play the Game
 
-### Option 1: AWS Cloud Deployment
+### Option 1: Raspberry Pi Deployment
 
-Play the game by going to http://asteroidsgames.com:3000
-
-`IMPORTANT NOTE:` To save money, I do not run this deployment all the time. It is only up 9am - 5pm, monday through friday.
+There is a Raspberry Pi hosted deployment of this project. Play the game by going to http://asteroidsgames.com:3000
 
 ### Option 2: Local Setup
 
