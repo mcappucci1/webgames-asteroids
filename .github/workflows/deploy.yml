@@ -25,6 +25,8 @@ jobs:
           scp -o StrictHostKeyChecking=no -i key.pem -P 500 ./frontend.tar $USERNAME@$HOSTNAME:~
           ssh -o StrictHostKeyChecking=no -i key.pem -p 500 $USERNAME@$HOSTNAME
             cd ~
+            ls
+            pwd
             sudo docker ps
             sudo docker stop frontend
             sudo docker rm frontend
