@@ -152,7 +152,11 @@ export class Ship extends Entity {
 		this.setVelocity(0.25);
 	}
 
-	sendMessage(key: string, down: boolean) {
+	sendMessage(key: string, repeat: boolean, down: boolean) {
+		if (repeat) {
+			return;
+		}
+		console.log("send");
 		const invalidKey =
 			key !== "ArrowRight" && key !== "ArrowLeft" && key !== "ArrowDown" && key !== "ArrowUp" && key !== "s";
 		if (invalidKey) {
@@ -162,8 +166,8 @@ export class Ship extends Entity {
 	}
 
 	addKeyPressListeners() {
-		window.addEventListener("keydown", (e: KeyboardEvent) => this.sendMessage(e.key, true));
-		window.addEventListener("keyup", (e: KeyboardEvent) => this.sendMessage(e.key, false));
+		window.addEventListener("keydown", (e: KeyboardEvent) => this.sendMessage(e.key, e.repeat, true));
+		window.addEventListener("keyup", (e: KeyboardEvent) => this.sendMessage(e.key, e.repeat, false));
 	}
 
 	destroy(): void {
