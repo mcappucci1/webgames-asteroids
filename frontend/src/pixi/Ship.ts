@@ -151,7 +151,15 @@ export class Ship extends Entity {
 		if (invalidKey) {
 			return;
 		}
-		WebSocketClient.setShipKeyDown(down, key, this.id);
+		const [w, h] = ClientGameEngine.getSize();
+		const locationData = {
+			x: this.graphic.x / w,
+			y: this.graphic.y / h,
+			rotation: this.theta,
+			vx: this.velocity[0] / Entity.screenMultiplier,
+			vy: this.velocity[1] / Entity.screenMultiplier,
+		};
+		WebSocketClient.setShipKeyPress(down, key, this.id, locationData);
 	}
 
 	addKeyPressListeners() {

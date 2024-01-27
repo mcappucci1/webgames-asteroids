@@ -118,6 +118,10 @@ export class Entity {
 		this.velocity = [normV * Math.cos(theta), normV * Math.sin(theta)];
 	}
 
+	setVelocity2(x: number, y: number) {
+		this.velocity = [x * Entity.screenMultiplier, y * Entity.screenMultiplier];
+	}
+
 	setVelocity(speed: number) {
 		speed *= Entity.screenMultiplier;
 		this.velocity = [speed * Math.cos(this.theta), speed * Math.sin(this.theta)];

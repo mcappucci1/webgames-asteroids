@@ -172,8 +172,15 @@ export class ClientGameEngine {
 	shipHandler(data: any) {
 		const { action } = data;
 		if (action === "keypress") {
-			const { id, down, key } = data;
+			const { id, down, key, locationData } = data;
 			const ship = this.ships.find((ship) => ship.id === id);
+			if (ship == null) {
+				return;
+			}
+			const { x, y, rotation, vx, vy } = locationData;
+			ship.setPosition(x * this.width, y * this.height);
+			ship.setVelocity2(vx, vy);
+			ship.setRotation(rotation);
 			if (down) {
 				ship?.onKeydownEvent(key);
 			} else {

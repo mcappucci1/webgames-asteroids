@@ -133,11 +133,11 @@ export class WebSocketClient {
 		this.sendMessage(MessageType.START_GAME, { data: {} }, cb);
 	}
 
-	static setShipKeyDown(down: boolean, key: string, id: number) {
+	static setShipKeyPress(down: boolean, key: string, id: number, locationData: object) {
 		if (!WebSocketClient.singletonReady()) {
 			return;
 		}
-		const data = { data: { type: "ship", data: { action: "keypress", down, key, id } } };
+		const data = { data: { type: "ship", data: { action: "keypress", down, key, id, locationData } } };
 		WebSocketClient.sendMessage(MessageType.GAME_DATA, data);
 	}
 
