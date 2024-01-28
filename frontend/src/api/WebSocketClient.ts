@@ -141,7 +141,7 @@ export class WebSocketClient {
 		WebSocketClient.sendMessage(MessageType.GAME_DATA, data);
 	}
 
-	static signalDestory(entity: Entity) {
+	static signalDestroy(entity: Entity) {
 		if (!WebSocketClient.singletonReady()) {
 			return;
 		}

@@ -58,9 +58,8 @@ export class Game {
 			}
 		} else if (entity instanceof Ship) {
 			entity.lives -= 1;
+			const i = this.clients.findIndex((client) => client.getId() === id);
 			if (entity.lives > 0) {
-				console.log(entity.lives);
-				const i = this.clients.findIndex((client) => client.getId() === id);
 				const ship = this.generateClientShip(this.clients[i], Game.shipColors[i], [0.5, 1], entity.lives);
 				const data = {
 					type: "ship",
@@ -75,6 +74,7 @@ export class Game {
 			} else {
 				this.entityIds.delete(entity.id);
 			}
+			this.updateLives(entity.id, entity.lives, Game.shipColors[i], entity.name!);
 		}
 		const msgData = {
 			type: "score",
@@ -175,6 +175,13 @@ export class Game {
 		}
 	}
 
+	updateLives(id: number, lives: number, color: number, name: string) {
+		const livesData = { type: "lives", data: { id, lives, color, name } };
+		for (const client of this.clients) {
+			client.sendMessage(true, undefined, MessageType.GAME_DATA, livesData);
+		}
+	}
+
 	generateClientShip(client: Client, color: number, position: number[], lives = 3) {
 		const ship = {
 			id: client.getId(),
@@ -203,6 +210,9 @@ export class Game {
 				ships,
 			},
 		};
+		for (const ship of ships) {
+			this.updateLives(ship.id, ship.lives, ship.color, ship.name!);
+		}
 		for (const client of this.clients) {
 			client.sendMessage(true, undefined, MessageType.GAME_DATA, data);
 		}

@@ -30,13 +30,18 @@ export class Ship extends Entity {
 	static engineForce: number = 150;
 	static dragCoefficient: number = 3;
 	static maxSpeed: number = 7;
-	public indestructible: boolean = false;
+	public indestructible: boolean = true;
 	private thrusting: boolean = false;
 	private direction: Direction = Direction.None;
 	private shootInterval: NodeJS.Timer | undefined;
+	private keyDownListener: (e: KeyboardEvent) => void;
+	private keyUpListener: (e: KeyboardEvent) => void;
 
 	constructor(id: number) {
 		super(ship, id);
+		this.keyDownListener = (e: KeyboardEvent) => this.sendMessage(e.key, e.repeat, true);
+		this.keyUpListener = (e: KeyboardEvent) => this.sendMessage(e.key, e.repeat, false);
+		setTimeout(() => (this.indestructible = false), 2000);
 	}
 
 	setVelocity(speed: number) {
@@ -132,16 +137,6 @@ export class Ship extends Entity {
 		}
 	}
 
-	start() {
-		this.indestructible = true;
-		const [w, h] = ClientGameEngine.getSize();
-		setTimeout(() => (this.indestructible = false), 1000);
-		this.setPosition(w / 2, h);
-		this.setRotation((3 * Math.PI) / 2);
-		this.setAngle((3 * Math.PI) / 2);
-		this.setVelocity(0.25);
-	}
-
 	sendMessage(key: string, repeat: boolean, down: boolean) {
 		if (repeat) {
 			return;
@@ -163,12 +158,14 @@ export class Ship extends Entity {
 	}
 
 	addKeyPressListeners() {
-		window.addEventListener("keydown", (e: KeyboardEvent) => this.sendMessage(e.key, e.repeat, true));
-		window.addEventListener("keyup", (e: KeyboardEvent) => this.sendMessage(e.key, e.repeat, false));
+		window.addEventListener("keydown", this.keyDownListener);
+		window.addEventListener("keyup", this.keyUpListener);
 	}
 
 	destroy(): void {
 		if (this.shootInterval) clearInterval(this.shootInterval);
 		super.destroy();
+		window.removeEventListener("keydown", this.keyDownListener);
+		window.removeEventListener("keyup", this.keyUpListener);
 	}
 }
