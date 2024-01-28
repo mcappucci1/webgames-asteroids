@@ -8,7 +8,7 @@ export class Asteroid implements Entity {
 	public speed: number;
 	public angle: number;
 	public style: number;
-	public score = 10;
+	public score = 16;
 	public split = true;
 	public splitCount = 0;
 
@@ -18,7 +18,9 @@ export class Asteroid implements Entity {
 		this.speed = speed;
 		this.angle = angle;
 		this.style = style;
-		this.splitCount = Math.log(Math.pow(1 / scale, 2)) / Math.log(2);
+		const denom = Math.pow(1 / scale, 2);
+		this.splitCount = Math.log(denom) / Math.log(2);
+		this.score = Math.round(this.score / denom);
 	}
 
 	canSplit() {
