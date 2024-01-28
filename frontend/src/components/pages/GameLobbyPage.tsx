@@ -7,6 +7,7 @@ import { Spinner } from "../utils/Spinner";
 import { BackButton } from "../utils/BackButton";
 import { toast, ToastContainer } from "react-toastify";
 import { TOAST_DISAPPEAR_OPTIONS } from "../utils/Toastify";
+import { DELAY, COUNTDOWN } from "../../pixi/ClientGameEngine";
 import "../../styles/GameLobbyPage.css";
 
 export const GameLobbyPage = ({ setPage }: PageProps) => {
@@ -29,7 +30,7 @@ export const GameLobbyPage = ({ setPage }: PageProps) => {
 	const handleStartGameCB = useCallback(
 		(data: MessageData) => {
 			if (data.data.success) {
-				setPage(Pages.PLAY_GAME);
+				setPage(Pages.INSTRUCTIONS);
 			} else {
 				toast.error("Could not start game.", TOAST_DISAPPEAR_OPTIONS);
 			}
@@ -42,7 +43,7 @@ export const GameLobbyPage = ({ setPage }: PageProps) => {
 	}, [handleLeaveGameCB]);
 
 	const startGameCB = useCallback(() => {
-		WebSocketClient.startGame(handleStartGameCB);
+		WebSocketClient.startGame(DELAY * COUNTDOWN + 1000, handleStartGameCB);
 	}, [handleStartGameCB]);
 
 	const getGameDataCB = useCallback((data: MessageData) => {

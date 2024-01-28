@@ -1,0 +1,14 @@
+.key-container {
+	border: 2px solid white;
+	border-radius: 10px;
+	width: 45px;
+	height: 45px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.key-text {
+	font-weight: bold;
+	font-size: large;
+}

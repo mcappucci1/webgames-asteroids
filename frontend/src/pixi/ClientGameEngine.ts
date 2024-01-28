@@ -8,6 +8,9 @@ import { Shot } from "./Shot";
 import { Ship } from "./Ship";
 import { WebSocketClient } from "../api/WebSocketClient";
 
+export const DELAY = 1500;
+export const COUNTDOWN = 3;
+
 export class ClientGameEngine {
 	static singleton: ClientGameEngine = new ClientGameEngine();
 	static updateCB: TickerCallback<null> = (dt: number) => this.singleton.update(dt);

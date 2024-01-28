@@ -6,6 +6,7 @@ import { JoinGamePage } from "./pages/JoinGamePage";
 import { SetNamePage } from "./pages/SetNamePage";
 import { GameLobbyPage } from "./pages/GameLobbyPage";
 import { PlayGamePage } from "./pages/PlayGamePage";
+import { InstructionsPage } from "./pages/InstructionsPage";
 import { MessageData } from "../common/Message";
 import { WebSocketClient } from "../api/WebSocketClient";
 import { toast } from "react-toastify";
@@ -39,6 +40,8 @@ export function App() {
 		pageCmp = <GameLobbyPage setPage={setPage} />;
 	} else if (page === Pages.PLAY_GAME) {
 		pageCmp = <PlayGamePage />;
+	} else if (page === Pages.INSTRUCTIONS) {
+		pageCmp = <InstructionsPage setPage={setPage} />;
 	}
 
 	return (

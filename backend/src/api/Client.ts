@@ -76,12 +76,12 @@ export class Client {
 		this.sendMessage(true, undefined, MessageType.ADD_CLIENT_TO_GAME, responseData);
 	}
 
-	startGameHandler() {
+	startGameHandler(data: any) {
 		if (this.game == undefined) {
 			this.sendMessage(false, "Failed to start game.", MessageType.START_GAME, undefined);
 			return;
 		}
-		this.game.start();
+		this.game.start(data.data.delayMs);
 	}
 
 	getGameInfoHandler() {
@@ -110,7 +110,7 @@ export class Client {
 		} else if (msgType === MessageType.ADD_CLIENT_TO_GAME) {
 			this.addSelfGameHandler(data);
 		} else if (msgType === MessageType.START_GAME) {
-			this.startGameHandler();
+			this.startGameHandler(data);
 		} else if (msgType === MessageType.GET_GAME_INFO) {
 			this.getGameInfoHandler();
 		} else if (msgType === MessageType.GAME_DATA) {

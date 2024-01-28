@@ -20,6 +20,7 @@ export class Game {
 	private entityId: number = 0;
 	private entityIds = new Map();
 	private score: number = 0;
+	private gameStartTimeout: NodeJS.Timeout | undefined;
 
 	constructor(name: string, controller: Controller) {
 		this.name = name;
@@ -218,7 +219,7 @@ export class Game {
 		}
 	}
 
-	start() {
+	start(delayMs = 0) {
 		if (this.started) {
 			return;
 		}
@@ -227,18 +228,24 @@ export class Game {
 		for (const client of this.clients) {
 			client.sendMessage(true, undefined, MessageType.START_GAME, undefined);
 		}
+		this.gameStartTimeout = setTimeout(() => {
+			this.generateClientShips();
 
-		this.generateClientShips();
-
-		setInterval(() => {
-			if (Math.random() < 0.25) {
-				this.generateAlienShip();
-			}
-			this.generateAsteroids();
-		}, this.generateAsteroidInterval);
+			setInterval(() => {
+				if (Math.random() < 0.25) {
+					this.generateAlienShip();
+				}
+				this.generateAsteroids();
+			}, this.generateAsteroidInterval);
+			this.gameStartTimeout = undefined;
+		}, delayMs);
 	}
 
 	destroy() {
+		if (this.gameStartTimeout != null) {
+			clearTimeout(this.gameStartTimeout);
+			this.gameStartTimeout = undefined;
+		}
 		if (this.generateAsteroidInterval != null) {
 			clearInterval(this.generateAsteroidInterval);
 		}

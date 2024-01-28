@@ -129,8 +129,8 @@ export class WebSocketClient {
 		WebSocketClient.sendMessage(MessageType.GET_GAME_INFO, { data: WebSocketClient.singleton?.gameName }, cb);
 	}
 
-	static startGame(cb: Function) {
-		this.sendMessage(MessageType.START_GAME, { data: {} }, cb);
+	static startGame(delayMs: number, cb: Function) {
+		this.sendMessage(MessageType.START_GAME, { data: { delayMs } }, cb);
 	}
 
 	static setShipKeyPress(down: boolean, key: string, id: number, locationData: object) {
