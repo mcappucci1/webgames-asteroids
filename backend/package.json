@@ -4,7 +4,7 @@
 	"description": "",
 	"main": "main.js",
 	"scripts": {
-		"test": "npx tsc && node ./dist/main.js"
+		"start": "npx tsc && node ./dist/main.js"
 	},
 	"author": "",
 	"license": "ISC",

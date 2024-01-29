@@ -164,8 +164,8 @@ export class Ship extends Entity {
 
 	destroy(): void {
 		if (this.shootInterval) clearInterval(this.shootInterval);
-		super.destroy();
 		window.removeEventListener("keydown", this.keyDownListener);
 		window.removeEventListener("keyup", this.keyUpListener);
+		super.destroy();
 	}
 }

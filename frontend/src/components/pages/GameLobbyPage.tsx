@@ -7,8 +7,9 @@ import { Spinner } from "../utils/Spinner";
 import { BackButton } from "../utils/BackButton";
 import { toast, ToastContainer } from "react-toastify";
 import { TOAST_DISAPPEAR_OPTIONS } from "../utils/Toastify";
-import { DELAY, COUNTDOWN } from "../../pixi/ClientGameEngine";
+import { DELAY, COUNTDOWN, ClientGameEngine } from "../../pixi/ClientGameEngine";
 import "../../styles/GameLobbyPage.css";
+import { IdleScreenEngine } from "../../pixi/IdleScreenEngine";
 
 export const GameLobbyPage = ({ setPage }: PageProps) => {
 	const [gameInfo, setGameInfo] = useState<any | undefined>(undefined);
@@ -59,6 +60,11 @@ export const GameLobbyPage = ({ setPage }: PageProps) => {
 		}
 		WebSocketClient.addMessageHandler(MessageType.START_GAME, handleStartGameCB);
 	}, [gameInfo, setPage, getGameDataCB, handleStartGameCB]);
+
+	useEffect(() => {
+		IdleScreenEngine.start();
+		ClientGameEngine.stop();
+	}, []);
 
 	return (
 		<PageOutline title="Game Lobby">

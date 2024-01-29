@@ -39,7 +39,7 @@ export function App() {
 	} else if (page === Pages.GAME_LOBBY) {
 		pageCmp = <GameLobbyPage setPage={setPage} />;
 	} else if (page === Pages.PLAY_GAME) {
-		pageCmp = <PlayGamePage />;
+		pageCmp = <PlayGamePage setPage={setPage} />;
 	} else if (page === Pages.INSTRUCTIONS) {
 		pageCmp = <InstructionsPage setPage={setPage} />;
 	}

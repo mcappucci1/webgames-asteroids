@@ -141,7 +141,7 @@ export class WebSocketClient {
 		WebSocketClient.sendMessage(MessageType.GAME_DATA, data);
 	}
 
-	static signalDestroy(entity: Entity) {
+	static signalDestroy(entity: Entity, countScore = true) {
 		if (!WebSocketClient.singletonReady()) {
 			return;
 		}
@@ -151,6 +151,7 @@ export class WebSocketClient {
 			data: {
 				type: "destroy",
 				id,
+				countScore,
 				location: [graphic.x / width, graphic.y / height],
 			},
 		};

@@ -24,6 +24,7 @@ export class ClientGameEngine {
 	private width: number = 0;
 	private setLifeCB: Function | undefined;
 	private setScoreCB: Function | undefined;
+	private started: boolean = false;
 
 	static setSetLifeCB(cb: Function) {
 		this.singleton.setLifeCB = cb;
@@ -34,10 +35,18 @@ export class ClientGameEngine {
 	}
 
 	static start() {
+		if (ClientGameEngine.singleton.started) {
+			return;
+		}
+		ClientGameEngine.singleton.started = true;
 		CanvasEngine.addTickerCB(ClientGameEngine.updateCB);
 	}
 
 	static stop() {
+		if (!ClientGameEngine.singleton.started) {
+			return;
+		}
+		ClientGameEngine.singleton.started = false;
 		CanvasEngine.removeTickerCB(ClientGameEngine.updateCB);
 	}
 
@@ -65,12 +74,43 @@ export class ClientGameEngine {
 		return [ClientGameEngine.singleton.width, ClientGameEngine.singleton.height];
 	}
 
+	static clear() {
+		for (const asteroid of this.singleton.asteroids) {
+			asteroid.destroy();
+		}
+		this.singleton.asteroids = [];
+		for (const alienShip of this.singleton.alienShips) {
+			alienShip.destroy();
+		}
+		this.singleton.alienShips = [];
+		for (const alienShot of this.singleton.alienShots) {
+			alienShot.destroy();
+		}
+		this.singleton.alienShots = [];
+		for (const ship of this.singleton.ships) {
+			ship.destroy();
+		}
+		this.singleton.ships = [];
+		for (const shot of this.singleton.shots) {
+			shot.destroy();
+		}
+		this.singleton.shots = [];
+		this.singleton.height = 0;
+		this.singleton.width = 0;
+		this.singleton.setLifeCB = undefined;
+		this.singleton.setScoreCB = undefined;
+		CanvasEngine.clear();
+	}
+
 	moveEntityArray(arr: Entity[], delta: number, removeOutOfBounds = true) {
 		let i = 0;
 		while (i < arr.length) {
 			const entity = arr[i];
 			entity.move(delta);
 			if (removeOutOfBounds && this.entityOutOfBounds(entity)) {
+				if (entity instanceof AlienShip || entity instanceof Asteroid) {
+					WebSocketClient.signalDestroy(entity, false);
+				}
 				entity.destroy();
 				arr.splice(i, 1);
 			} else {
@@ -199,6 +239,7 @@ export class ClientGameEngine {
 		for (const shipData of data.ships) {
 			const { position, speed, theta, moveEntity, id, color } = shipData;
 			const ship = new Ship(id);
+			CanvasEngine.addChild(ship);
 			ship.setPosition(
 				position[0] * this.width + moveEntity[0] * ship.graphic.width,
 				position[1] * this.height + moveEntity[1] * ship.graphic.height
@@ -211,7 +252,6 @@ export class ClientGameEngine {
 				ship.addKeyPressListeners();
 			}
 			this.ships.push(ship);
-			CanvasEngine.addChild(ship);
 		}
 	}
 
@@ -221,6 +261,14 @@ export class ClientGameEngine {
 			this.shipKeyPressHandler(data);
 		} else if (action === "createShips") {
 			this.shipCreateHandler(data);
+		} else if (action === "removeShip") {
+			const i = this.ships.findIndex((ship) => ship.id === data.id);
+			if (i === -1) {
+				return;
+			}
+			this.ships[i].explode();
+			this.ships[i].destroy();
+			this.ships.splice(i, 1);
 		}
 	}
 

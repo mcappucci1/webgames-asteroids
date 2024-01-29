@@ -149,6 +149,9 @@ export class Entity {
 	}
 
 	destroy() {
+		if (this.graphic.parent != null) {
+			this.graphic.parent.removeChild(this.graphic);
+		}
 		this.graphic.destroy();
 	}
 
