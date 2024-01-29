@@ -9,7 +9,7 @@ export class Client {
 	private game: Game | undefined;
 	private id: number;
 	public name: string | undefined;
-	public color: number = 0;
+	public color: string = "";
 
 	constructor(ws: WebSocket, controller: Controller) {
 		this.id = Math.floor(Math.random() * Math.floor(Math.random() * Date.now()));

@@ -10,7 +10,7 @@ import { Controller } from "./Controller";
 export class Game {
 	static maxClients: number = 6;
 	static maxId: number = 1000;
-	static shipColors = [0x8888ff, 0xffff00, 0xff00ff, 0x00ffff, 0xff0000, 0x00ff00, 0x0000ff, 0xff8888];
+	static shipColors = ["#8888ff", "#ffff00", "#ff00ff", "#00ffff", "#ff0000", "#00ff00", "#0000ff", "#ff8888"];
 
 	private controller: Controller;
 	private name: string;
@@ -151,6 +151,13 @@ export class Game {
 		for (const client of this.clients) {
 			client.sendMessage(true, undefined, MessageType.GAME_DATA, data);
 		}
+		const ship = this.entityIds.get(client.getId());
+		if (ship != null) {
+			--this.liveShips;
+			if (this.liveShips === 0) {
+				this.stop();
+			}
+		}
 		this.updateLives(client.getId(), 0, client.color, client.name!);
 		if (this.clients.length === 0) {
 			this.destroy();
@@ -208,19 +215,19 @@ export class Game {
 		}
 	}
 
-	updateLives(id: number, lives: number, color: number, name: string) {
+	updateLives(id: number, lives: number, color: string, name: string) {
 		const livesData = { type: "lives", data: { id, lives, color, name } };
 		for (const client of this.clients) {
 			client.sendMessage(true, undefined, MessageType.GAME_DATA, livesData);
 		}
 	}
 
-	generateClientShip(client: Client, color: number, position: number[], lives = 3) {
+	generateClientShip(client: Client, color: string, position: number[], lives = 3) {
 		const ship = {
 			id: client.getId(),
 			speed: 2,
 			lives: lives,
-			moveEntity: [0, 1],
+			moveEntity: [0, 0.5],
 			color: color,
 			name: client.name,
 			theta: (3 * Math.PI) / 2,

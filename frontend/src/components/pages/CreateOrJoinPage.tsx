@@ -26,7 +26,8 @@ export const CreateOrJoinPage = ({ setPage }: PageProps) => {
 					<h2 className="animate-underline">Create Game</h2>
 				</button>
 			</div>
-			<BackButton className="mt-5" setPage={() => setPage(Pages.SET_NAME_PAGE)} />
+			<p className="mt-5 text-center">Play with up to six friends!</p>
+			<BackButton className="mt-3" setPage={() => setPage(Pages.SET_NAME_PAGE)} />
 		</PageOutline>
 	);
 };

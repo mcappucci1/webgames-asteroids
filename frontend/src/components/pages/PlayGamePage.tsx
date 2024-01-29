@@ -29,7 +29,6 @@ export const PlayGamePage = ({ setPage }: PageProps) => {
 	);
 
 	const setScoreCB = useCallback((score: number) => {
-		console.log(score);
 		setScore(score);
 	}, []);
 
