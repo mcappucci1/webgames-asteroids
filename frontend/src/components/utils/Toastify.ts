@@ -17,4 +17,5 @@ export const TOAST_PERMANENT_OPTIONS: ToastOptions<{}> = {
 	autoClose: false,
 	hideProgressBar: true,
 	theme: "dark",
+	className: "top-z",
 };

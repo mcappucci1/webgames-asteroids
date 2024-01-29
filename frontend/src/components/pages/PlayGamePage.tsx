@@ -8,6 +8,7 @@ import { LifeBanner } from "../utils/LifeBanner";
 import { PageProps } from "../utils/PageOutline";
 import "../../styles/PlayGamePage.css";
 import { Pages } from "../../common/Pages";
+import { ToastContainer } from "react-toastify";
 
 const { innerHeight, innerWidth } = window;
 const boardSize = Math.min(innerHeight, innerWidth) * 0.9;
@@ -67,6 +68,7 @@ export const PlayGamePage = ({ setPage }: PageProps) => {
 
 	return (
 		<div className="bg-transparent w-100 h-100 d-flex justify-content-center align-items-center">
+			<ToastContainer />
 			<div
 				id="game-board"
 				className="bg-transparent"

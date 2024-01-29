@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { DELAY, COUNTDOWN } from "../../pixi/ClientGameEngine";
 import { Pages } from "../../common/Pages";
 import "../../styles/InstructionsPage.css";
+import { ToastContainer } from "react-toastify";
 
 export const InstructionsPage = ({ setPage }: PageProps) => {
 	const [count, setCount] = useState<number>(3);
@@ -23,6 +24,7 @@ export const InstructionsPage = ({ setPage }: PageProps) => {
 
 	return (
 		<PageOutline title={count.toString()}>
+			<ToastContainer />
 			<div className="col-12 d-flex justify-content-center">
 				<div id="instructions-container" className="d-inline-block d-flex align-items-end">
 					<div className="d-inline-block me-5">
