@@ -16,7 +16,9 @@ export class Game {
 	private name: string;
 	private started: boolean = false;
 	private clients: Array<Client> = [];
-	private generateAsteroidInterval: number = 1000;
+	private generateAsteroidInterval: number = 5000;
+	private intervalCount: number = 0;
+	private alienSpawnOdds: number = 0;
 	private entityId: number = 0;
 	private entityIds = new Map();
 	private score: number = 0;
@@ -250,6 +252,24 @@ export class Game {
 		}
 	}
 
+	createGameInterval() {
+		this.gameInterval = setInterval(() => {
+			const makeFaster =
+				this.generateAsteroidInterval >= 500 && ++this.intervalCount * this.generateAsteroidInterval > 10_000;
+			if (makeFaster) {
+				this.generateAsteroidInterval -= 250;
+				this.alienSpawnOdds += 0.01;
+				this.intervalCount = 0;
+				clearInterval(this.gameInterval);
+				this.createGameInterval();
+			}
+			if (Math.random() < this.alienSpawnOdds) {
+				this.generateAlienShip();
+			}
+			this.generateAsteroids();
+		}, this.generateAsteroidInterval);
+	}
+
 	start(delayMs = 0) {
 		if (this.started) {
 			return;
@@ -259,19 +279,16 @@ export class Game {
 		this.entityId = 0;
 		this.entityIds = new Map();
 		this.score = 0;
+		this.alienSpawnOdds = 0;
+		this.intervalCount = 0;
+		this.generateAsteroidInterval = 5000;
 
 		for (const client of this.clients) {
 			client.sendMessage(true, undefined, MessageType.START_GAME, undefined);
 		}
 		this.gameStartTimeout = setTimeout(() => {
 			this.generateClientShips();
-
-			this.gameInterval = setInterval(() => {
-				if (Math.random() < 0.05) {
-					this.generateAlienShip();
-				}
-				this.generateAsteroids();
-			}, this.generateAsteroidInterval);
+			this.createGameInterval();
 			this.gameStartTimeout = undefined;
 		}, delayMs);
 	}

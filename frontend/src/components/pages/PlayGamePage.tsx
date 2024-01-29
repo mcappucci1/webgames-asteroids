@@ -78,7 +78,7 @@ export const PlayGamePage = ({ setPage }: PageProps) => {
 						<div>
 							{Object.keys(shipLives).map((id: string) => {
 								const { lives, name, color } = shipLives[id];
-								return <LifeBanner lives={lives} name={name} color={color} />;
+								return <LifeBanner key={color} lives={lives} name={name} color={color} />;
 							})}
 						</div>
 						<div className="me-1">{score}</div>
