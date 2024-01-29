@@ -36,7 +36,7 @@ export class GameUtils {
 
 	static generateRandomAsteroid(): EntityData {
 		const randomData = GameUtils.generateRandomEntity();
-		const scale = Math.sqrt(1 / Math.pow(2, Math.floor(Math.random() * 3)));
+		const scale = Math.sqrt(1 / Math.pow(2, Math.floor(Math.random() * 2.9)));
 		const style = Math.floor(Math.random() * 3);
 		return { scale, style, ...randomData };
 	}

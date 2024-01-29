@@ -129,19 +129,19 @@ export class WebSocketClient {
 		WebSocketClient.sendMessage(MessageType.GET_GAME_INFO, { data: WebSocketClient.singleton?.gameName }, cb);
 	}
 
-	static startGame(cb: Function) {
-		this.sendMessage(MessageType.START_GAME, { data: {} }, cb);
+	static startGame(delayMs: number, cb: Function) {
+		this.sendMessage(MessageType.START_GAME, { data: { delayMs } }, cb);
 	}
 
-	static setShipKeyDown(down: boolean, key: string, id: number) {
+	static setShipKeyPress(down: boolean, key: string, id: number, locationData: object) {
 		if (!WebSocketClient.singletonReady()) {
 			return;
 		}
-		const data = { data: { type: "ship", data: { action: "keypress", down, key, id } } };
+		const data = { data: { type: "ship", data: { action: "keypress", down, key, id, locationData } } };
 		WebSocketClient.sendMessage(MessageType.GAME_DATA, data);
 	}
 
-	static signalDestory(entity: Entity) {
+	static signalDestroy(entity: Entity, countScore = true) {
 		if (!WebSocketClient.singletonReady()) {
 			return;
 		}
@@ -151,6 +151,7 @@ export class WebSocketClient {
 			data: {
 				type: "destroy",
 				id,
+				countScore,
 				location: [graphic.x / width, graphic.y / height],
 			},
 		};

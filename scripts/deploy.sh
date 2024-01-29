@@ -12,7 +12,7 @@ ssh -o StrictHostKeyChecking=no -i key.pem -p $SSH_PORT $USERNAME@$HOSTNAME "
     sudo docker rmi $1:latest
     sudo chmod 777 $1.tar
     sudo docker load -i $1.tar
-    sudo docker run -d -p 4000:4000 --name $1 --restart unless-stopped $1:latest
+    sudo docker run -d -p $2:$2 --name $1 --restart unless-stopped $1:latest
     sudo rm -f ./$1.tar
 "
 rm -f key.pem

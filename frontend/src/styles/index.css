@@ -43,6 +43,10 @@ body,
 	justify-self: end;
 }
 
+.top-z {
+	z-index: 1000;
+}
+
 .test {
 	border: 1px solid red;
 }

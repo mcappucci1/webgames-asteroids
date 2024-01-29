@@ -30,13 +30,18 @@ export class Ship extends Entity {
 	static engineForce: number = 150;
 	static dragCoefficient: number = 3;
 	static maxSpeed: number = 7;
-	public indestructible: boolean = false;
+	public indestructible: boolean = true;
 	private thrusting: boolean = false;
 	private direction: Direction = Direction.None;
 	private shootInterval: NodeJS.Timer | undefined;
+	private keyDownListener: (e: KeyboardEvent) => void;
+	private keyUpListener: (e: KeyboardEvent) => void;
 
 	constructor(id: number) {
 		super(ship, id);
+		this.keyDownListener = (e: KeyboardEvent) => this.sendMessage(e.key, e.repeat, true);
+		this.keyUpListener = (e: KeyboardEvent) => this.sendMessage(e.key, e.repeat, false);
+		setTimeout(() => (this.indestructible = false), 2000);
 	}
 
 	setVelocity(speed: number) {
@@ -85,18 +90,9 @@ export class Ship extends Entity {
 	}
 
 	thrust(delta: number) {
-		if (this.getSpeed() >= Ship.maxSpeed) {
-			return;
-		}
-		const forwardAcceleration = (Ship.engineForce / Ship.mass) * Entity.screenMultiplier;
-		this.velocity[0] += forwardAcceleration * delta * Math.cos(this.graphic.rotation);
-		this.velocity[1] += forwardAcceleration * delta * Math.sin(this.graphic.rotation);
-		const vel = this.getSpeed();
-		if (vel > Ship.maxSpeed) {
-			const factor = Ship.maxSpeed / vel;
-			this.velocity[0] *= factor;
-			this.velocity[1] *= factor;
-		}
+		const a = Ship.engineForce / Ship.mass;
+		this.velocity[0] += a * delta * Math.cos(this.graphic.rotation) * Entity.screenMultiplier;
+		this.velocity[1] += a * delta * Math.sin(this.graphic.rotation) * Entity.screenMultiplier;
 	}
 
 	enableThrust() {
@@ -125,8 +121,7 @@ export class Ship extends Entity {
 		const fy = Ship.dragCoefficient * Math.abs(this.velocity[1]);
 		this.velocity[1] -= (fy / Ship.mass) * delta * (this.velocity[1] < 0 ? -1 : 1);
 
-		this.graphic.x += this.velocity[0] * delta;
-		this.graphic.y += this.velocity[1] * delta;
+		super.move(delta);
 
 		const bounds = this.graphic.getBounds();
 		const [w, h] = ClientGameEngine.getSize();
@@ -142,32 +137,35 @@ export class Ship extends Entity {
 		}
 	}
 
-	start() {
-		this.indestructible = true;
-		const [w, h] = ClientGameEngine.getSize();
-		setTimeout(() => (this.indestructible = false), 1000);
-		this.setPosition(w / 2, h);
-		this.setRotation((3 * Math.PI) / 2);
-		this.setAngle((3 * Math.PI) / 2);
-		this.setVelocity(0.25);
-	}
-
-	sendMessage(key: string, down: boolean) {
+	sendMessage(key: string, repeat: boolean, down: boolean) {
+		if (repeat) {
+			return;
+		}
 		const invalidKey =
 			key !== "ArrowRight" && key !== "ArrowLeft" && key !== "ArrowDown" && key !== "ArrowUp" && key !== "s";
 		if (invalidKey) {
 			return;
 		}
-		WebSocketClient.setShipKeyDown(down, key, this.id);
+		const [w, h] = ClientGameEngine.getSize();
+		const locationData = {
+			x: this.graphic.x / w,
+			y: this.graphic.y / h,
+			rotation: this.theta,
+			vx: this.velocity[0] / Entity.screenMultiplier,
+			vy: this.velocity[1] / Entity.screenMultiplier,
+		};
+		WebSocketClient.setShipKeyPress(down, key, this.id, locationData);
 	}
 
 	addKeyPressListeners() {
-		window.addEventListener("keydown", (e: KeyboardEvent) => this.sendMessage(e.key, true));
-		window.addEventListener("keyup", (e: KeyboardEvent) => this.sendMessage(e.key, false));
+		window.addEventListener("keydown", this.keyDownListener);
+		window.addEventListener("keyup", this.keyUpListener);
 	}
 
 	destroy(): void {
 		if (this.shootInterval) clearInterval(this.shootInterval);
+		window.removeEventListener("keydown", this.keyDownListener);
+		window.removeEventListener("keyup", this.keyUpListener);
 		super.destroy();
 	}
 }

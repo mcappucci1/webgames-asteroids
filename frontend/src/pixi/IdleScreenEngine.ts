@@ -81,6 +81,8 @@ export class IdleScreenEngine {
 		if (IdleScreenEngine.singleton.started) {
 			return;
 		}
+		CanvasEngine.setCanvasSize(window.innerHeight, window.innerWidth);
+		CanvasEngine.setCanvasPosition(0, 0);
 		CanvasEngine.addTickerCB(IdleScreenEngine.moveAsteroidsCB);
 		IdleScreenEngine.singleton.started = true;
 	}

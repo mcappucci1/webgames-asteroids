@@ -10,16 +10,21 @@ import { Controller } from "./Controller";
 export class Game {
 	static maxClients: number = 6;
 	static maxId: number = 1000;
-	static shipColors = [0x8888ff, 0xffff00, 0xff00ff, 0x00ffff, 0xff0000, 0x00ff00, 0x0000ff, 0xff8888];
+	static shipColors = ["#8888ff", "#ffff00", "#ff00ff", "#00ffff", "#ff0000", "#00ff00", "#0000ff", "#ff8888"];
 
 	private controller: Controller;
 	private name: string;
 	private started: boolean = false;
 	private clients: Array<Client> = [];
-	private generateAsteroidInterval: number = 1000;
+	private generateAsteroidInterval: number = 5000;
+	private intervalCount: number = 0;
+	private alienSpawnOdds: number = 0;
 	private entityId: number = 0;
 	private entityIds = new Map();
 	private score: number = 0;
+	private gameStartTimeout: NodeJS.Timeout | undefined;
+	private gameInterval: NodeJS.Timeout | undefined;
+	private liveShips = 0;
 
 	constructor(name: string, controller: Controller) {
 		this.name = name;
@@ -32,49 +37,67 @@ export class Game {
 		}
 	}
 
-	destoryHandler(data: any) {
-		const { id } = data;
+	destroyAsteroidHandler(entity: any, data: any) {
+		const entities = entity.splitEntity(data.location);
+		for (const entity of entities) {
+			entity.id = this.entityId;
+			const { style, scale, speed, theta } = entity;
+			const asteroid = new Asteroid(this.entityId, scale!, speed, theta, style!);
+			this.entityIds.set(this.entityId, asteroid);
+			this.entityId = ++this.entityId % Game.maxId;
+			const data = {
+				type: "asteroid",
+				data: entity,
+			};
+			for (const client of this.clients) {
+				client.sendMessage(true, undefined, MessageType.GAME_DATA, data);
+			}
+		}
+	}
+
+	destroyShipHandler(entity: any, id: any) {
+		entity.lives -= 1;
+		const i = this.clients.findIndex((client) => client.getId() === id);
+		this.updateLives(entity.id, entity.lives, this.clients[i].color, entity.name!);
+		if (entity.lives > 0) {
+			const ship = this.generateClientShip(this.clients[i], this.clients[i].color, [0.5, 1], entity.lives);
+			const data = {
+				type: "ship",
+				data: {
+					action: "createShips",
+					ships: [ship],
+				},
+			};
+			for (const client of this.clients) {
+				client.sendMessage(true, undefined, MessageType.GAME_DATA, data);
+			}
+		} else {
+			this.entityIds.delete(entity.id);
+			--this.liveShips;
+			if (this.liveShips === 0) {
+				this.stop();
+			}
+		}
+	}
+
+	destroyHandler(data: any) {
+		const { id, countScore } = data;
 		const entity = this.entityIds.get(id);
 		if (entity == null) {
 			return;
 		}
 		this.entityIds.delete(id);
+		if (entity instanceof AlienShip) {
+			entity.destroy();
+		}
+		if (!countScore) {
+			return;
+		}
 		this.score += entity.score;
 		if (entity.split && entity.canSplit()) {
-			const entities = entity.splitEntity(data.location);
-			for (const entity of entities) {
-				entity.id = this.entityId;
-				const { style, scale, speed, theta } = entity;
-				const asteroid = new Asteroid(this.entityId, scale!, speed, theta, style!);
-				this.entityIds.set(this.entityId, asteroid);
-				this.entityId = ++this.entityId % Game.maxId;
-				const data = {
-					type: "asteroid",
-					data: entity,
-				};
-				for (const client of this.clients) {
-					client.sendMessage(true, undefined, MessageType.GAME_DATA, data);
-				}
-			}
+			this.destroyAsteroidHandler(entity, data);
 		} else if (entity instanceof Ship) {
-			entity.lives -= 1;
-			if (entity.lives > 0) {
-				console.log(entity.lives);
-				const i = this.clients.findIndex((client) => client.getId() === id);
-				const ship = this.generateClientShip(this.clients[i], Game.shipColors[i], [0.5, 1], entity.lives);
-				const data = {
-					type: "ship",
-					data: {
-						action: "createShips",
-						ships: [ship],
-					},
-				};
-				for (const client of this.clients) {
-					client.sendMessage(true, undefined, MessageType.GAME_DATA, data);
-				}
-			} else {
-				this.entityIds.delete(entity.id);
-			}
+			this.destroyShipHandler(entity, id);
 		}
 		const msgData = {
 			type: "score",
@@ -90,7 +113,7 @@ export class Game {
 		if (type === "ship") {
 			this.shipHandler(data.data);
 		} else if (type === "destroy") {
-			this.destoryHandler(data.data);
+			this.destroyHandler(data.data);
 		}
 	}
 
@@ -118,6 +141,24 @@ export class Game {
 		for (const client of this.clients) {
 			client.sendMessage(true, undefined, MessageType.GET_GAME_INFO, responseData);
 		}
+		const data = {
+			type: "ship",
+			data: {
+				action: "removeShip",
+				id: client.getId(),
+			},
+		};
+		for (const client of this.clients) {
+			client.sendMessage(true, undefined, MessageType.GAME_DATA, data);
+		}
+		const ship = this.entityIds.get(client.getId());
+		if (ship != null) {
+			--this.liveShips;
+			if (this.liveShips === 0) {
+				this.stop();
+			}
+		}
+		this.updateLives(client.getId(), 0, client.color, client.name!);
 		if (this.clients.length === 0) {
 			this.destroy();
 		}
@@ -145,7 +186,6 @@ export class Game {
 		const alienShotData = GameUtils.generateRandomEntity();
 		alienShotData.shipId = shipId;
 		alienShotData.id = this.entityId;
-		this.entityIds.set(this.entityId, new Shot(this.entityId));
 
 		this.entityId = ++this.entityId % Game.maxId;
 
@@ -175,12 +215,19 @@ export class Game {
 		}
 	}
 
-	generateClientShip(client: Client, color: number, position: number[], lives = 3) {
+	updateLives(id: number, lives: number, color: string, name: string) {
+		const livesData = { type: "lives", data: { id, lives, color, name } };
+		for (const client of this.clients) {
+			client.sendMessage(true, undefined, MessageType.GAME_DATA, livesData);
+		}
+	}
+
+	generateClientShip(client: Client, color: string, position: number[], lives = 3) {
 		const ship = {
 			id: client.getId(),
 			speed: 2,
 			lives: lives,
-			moveEntity: [0, 1],
+			moveEntity: [0, 0.5],
 			color: color,
 			name: client.name,
 			theta: (3 * Math.PI) / 2,
@@ -194,7 +241,8 @@ export class Game {
 		const diff = 1 / (this.clients.length + 1);
 		const ships = [];
 		for (let i = 0; i < this.clients.length; ++i) {
-			ships.push(this.generateClientShip(this.clients[i], Game.shipColors[i], [diff * (i + 1), 1]));
+			this.clients[i].color = Game.shipColors[i];
+			ships.push(this.generateClientShip(this.clients[i], this.clients[i].color, [diff * (i + 1), 0.95]));
 		}
 		const data = {
 			type: "ship",
@@ -203,37 +251,97 @@ export class Game {
 				ships,
 			},
 		};
+		for (const ship of ships) {
+			this.updateLives(ship.id, ship.lives, ship.color, ship.name!);
+		}
 		for (const client of this.clients) {
 			client.sendMessage(true, undefined, MessageType.GAME_DATA, data);
 		}
 	}
 
-	start() {
-		if (this.started) {
-			return;
-		}
-		this.started = true;
-
-		for (const client of this.clients) {
-			client.sendMessage(true, undefined, MessageType.START_GAME, undefined);
-		}
-
-		this.generateClientShips();
-
-		setInterval(() => {
-			if (Math.random() < 0.05) {
+	createGameInterval() {
+		this.gameInterval = setInterval(() => {
+			const makeFaster =
+				this.generateAsteroidInterval >= 500 && ++this.intervalCount * this.generateAsteroidInterval > 10_000;
+			if (makeFaster) {
+				this.generateAsteroidInterval -= 250;
+				this.alienSpawnOdds += 0.01;
+				this.intervalCount = 0;
+				clearInterval(this.gameInterval);
+				this.createGameInterval();
+			}
+			if (Math.random() < this.alienSpawnOdds) {
 				this.generateAlienShip();
 			}
 			this.generateAsteroids();
 		}, this.generateAsteroidInterval);
 	}
 
+	start(delayMs = 0) {
+		if (this.started) {
+			return;
+		}
+		this.started = true;
+		this.liveShips = this.clients.length;
+		this.entityId = 0;
+		this.entityIds = new Map();
+		this.score = 0;
+		this.alienSpawnOdds = 0;
+		this.intervalCount = 0;
+		this.generateAsteroidInterval = 5000;
+
+		for (const client of this.clients) {
+			client.sendMessage(true, undefined, MessageType.START_GAME, undefined);
+		}
+		this.gameStartTimeout = setTimeout(() => {
+			this.generateClientShips();
+			this.createGameInterval();
+			this.gameStartTimeout = undefined;
+		}, delayMs);
+	}
+
+	stop() {
+		if (this.started) {
+			const data = {
+				score: this.score,
+			};
+			for (const client of this.clients) {
+				client.sendMessage(true, undefined, MessageType.END_GAME, data);
+			}
+			for (const client of this.clients) {
+				client;
+			}
+		}
+		this.started = false;
+		if (this.gameStartTimeout != null) {
+			clearTimeout(this.gameStartTimeout);
+			this.gameStartTimeout = undefined;
+		}
+		if (this.gameInterval != null) {
+			clearInterval(this.gameInterval);
+		}
+		for (const entity of this.entityIds.values()) {
+			if (entity instanceof AlienShip) {
+				entity.destroy();
+			}
+		}
+	}
+
 	destroy() {
-		if (this.generateAsteroidInterval != null) {
-			clearInterval(this.generateAsteroidInterval);
+		if (this.gameStartTimeout != null) {
+			clearTimeout(this.gameStartTimeout);
+			this.gameStartTimeout = undefined;
+		}
+		if (this.gameInterval != null) {
+			clearInterval(this.gameInterval);
 		}
 		for (const client of this.clients) {
 			client.setGame(undefined);
+		}
+		for (const entity of this.entityIds.values()) {
+			if (entity instanceof AlienShip) {
+				entity.destroy();
+			}
 		}
 		this.controller.removeGame(this.name);
 	}

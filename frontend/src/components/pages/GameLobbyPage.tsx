@@ -7,7 +7,9 @@ import { Spinner } from "../utils/Spinner";
 import { BackButton } from "../utils/BackButton";
 import { toast, ToastContainer } from "react-toastify";
 import { TOAST_DISAPPEAR_OPTIONS } from "../utils/Toastify";
+import { DELAY, COUNTDOWN, ClientGameEngine } from "../../pixi/ClientGameEngine";
 import "../../styles/GameLobbyPage.css";
+import { IdleScreenEngine } from "../../pixi/IdleScreenEngine";
 
 export const GameLobbyPage = ({ setPage }: PageProps) => {
 	const [gameInfo, setGameInfo] = useState<any | undefined>(undefined);
@@ -29,7 +31,7 @@ export const GameLobbyPage = ({ setPage }: PageProps) => {
 	const handleStartGameCB = useCallback(
 		(data: MessageData) => {
 			if (data.data.success) {
-				setPage(Pages.PLAY_GAME);
+				setPage(Pages.INSTRUCTIONS);
 			} else {
 				toast.error("Could not start game.", TOAST_DISAPPEAR_OPTIONS);
 			}
@@ -42,7 +44,7 @@ export const GameLobbyPage = ({ setPage }: PageProps) => {
 	}, [handleLeaveGameCB]);
 
 	const startGameCB = useCallback(() => {
-		WebSocketClient.startGame(handleStartGameCB);
+		WebSocketClient.startGame(DELAY * COUNTDOWN + 1000, handleStartGameCB);
 	}, [handleStartGameCB]);
 
 	const getGameDataCB = useCallback((data: MessageData) => {
@@ -58,6 +60,11 @@ export const GameLobbyPage = ({ setPage }: PageProps) => {
 		}
 		WebSocketClient.addMessageHandler(MessageType.START_GAME, handleStartGameCB);
 	}, [gameInfo, setPage, getGameDataCB, handleStartGameCB]);
+
+	useEffect(() => {
+		IdleScreenEngine.start();
+		ClientGameEngine.stop();
+	}, []);
 
 	return (
 		<PageOutline title="Game Lobby">

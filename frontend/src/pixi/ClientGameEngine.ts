@@ -8,6 +8,9 @@ import { Shot } from "./Shot";
 import { Ship } from "./Ship";
 import { WebSocketClient } from "../api/WebSocketClient";
 
+export const DELAY = 1500;
+export const COUNTDOWN = 3;
+
 export class ClientGameEngine {
 	static singleton: ClientGameEngine = new ClientGameEngine();
 	static updateCB: TickerCallback<null> = (dt: number) => this.singleton.update(dt);
@@ -19,10 +22,9 @@ export class ClientGameEngine {
 	private shots: Array<Shot> = [];
 	private height: number = 0;
 	private width: number = 0;
-	private x: number = 0;
-	private y: number = 0;
 	private setLifeCB: Function | undefined;
 	private setScoreCB: Function | undefined;
+	private started: boolean = false;
 
 	static setSetLifeCB(cb: Function) {
 		this.singleton.setLifeCB = cb;
@@ -33,10 +35,18 @@ export class ClientGameEngine {
 	}
 
 	static start() {
+		if (ClientGameEngine.singleton.started) {
+			return;
+		}
+		ClientGameEngine.singleton.started = true;
 		CanvasEngine.addTickerCB(ClientGameEngine.updateCB);
 	}
 
 	static stop() {
+		if (!ClientGameEngine.singleton.started) {
+			return;
+		}
+		ClientGameEngine.singleton.started = false;
 		CanvasEngine.removeTickerCB(ClientGameEngine.updateCB);
 	}
 
@@ -57,8 +67,6 @@ export class ClientGameEngine {
 	}
 
 	static setBoardPosition(x: number, y: number) {
-		this.singleton.x = x;
-		this.singleton.y = y;
 		CanvasEngine.setCanvasPosition(x, y);
 	}
 
@@ -66,12 +74,43 @@ export class ClientGameEngine {
 		return [ClientGameEngine.singleton.width, ClientGameEngine.singleton.height];
 	}
 
-	moveEntityArray(arr: Entity[], delta: number) {
+	static clear() {
+		for (const asteroid of this.singleton.asteroids) {
+			asteroid.destroy();
+		}
+		this.singleton.asteroids = [];
+		for (const alienShip of this.singleton.alienShips) {
+			alienShip.destroy();
+		}
+		this.singleton.alienShips = [];
+		for (const alienShot of this.singleton.alienShots) {
+			alienShot.destroy();
+		}
+		this.singleton.alienShots = [];
+		for (const ship of this.singleton.ships) {
+			ship.destroy();
+		}
+		this.singleton.ships = [];
+		for (const shot of this.singleton.shots) {
+			shot.destroy();
+		}
+		this.singleton.shots = [];
+		this.singleton.height = 0;
+		this.singleton.width = 0;
+		this.singleton.setLifeCB = undefined;
+		this.singleton.setScoreCB = undefined;
+		CanvasEngine.clear();
+	}
+
+	moveEntityArray(arr: Entity[], delta: number, removeOutOfBounds = true) {
 		let i = 0;
 		while (i < arr.length) {
 			const entity = arr[i];
 			entity.move(delta);
-			if (this.entityOutOfBounds(entity)) {
+			if (removeOutOfBounds && this.entityOutOfBounds(entity)) {
+				if (entity instanceof AlienShip || entity instanceof Asteroid) {
+					WebSocketClient.signalDestroy(entity, false);
+				}
 				entity.destroy();
 				arr.splice(i, 1);
 			} else {
@@ -95,15 +134,17 @@ export class ClientGameEngine {
 		this.moveEntityArray(this.asteroids, dt);
 		this.moveEntityArray(this.alienShips, dt);
 		this.moveEntityArray(this.alienShots, dt);
-		this.moveEntityArray(this.ships, dt);
+		this.moveEntityArray(this.ships, dt, false);
 		this.moveEntityArray(this.shots, dt);
 		this.detectCollisionsForEntityArray(this.asteroids, [this.shots, this.alienShots]);
-		this.detectCollisionsForEntityArray(this.alienShips, [this.shots]);
+		this.detectCollisionsForEntityArray(this.alienShips, [this.shots, this.asteroids]);
 		this.detectCollisionsForEntityArray(this.ships, [this.asteroids, this.alienShips, this.alienShots]);
 	}
 
 	destroyEntity(arr: Entity[], i: number) {
-		WebSocketClient.signalDestory(arr[i]);
+		if (!(arr[i] instanceof Ship) || arr[i].id === WebSocketClient.getClientId()) {
+			WebSocketClient.signalDestroy(arr[i]);
+		}
 		arr[i].explode();
 		arr[i].destroy();
 		arr.splice(i, 1);
@@ -112,6 +153,10 @@ export class ClientGameEngine {
 	detectCollisionsForEntityArray(targetArray: Entity[], collisionObjects: Entity[][]) {
 		let i = 0;
 		while (i < targetArray.length) {
+			if (targetArray[i] instanceof Ship && (targetArray[i] as Ship).indestructible) {
+				++i;
+				continue;
+			}
 			let destroy = false;
 			for (const entityArr of collisionObjects) {
 				let j = 0;
@@ -173,37 +218,57 @@ export class ClientGameEngine {
 		CanvasEngine.addChild(alienShot);
 	}
 
+	shipKeyPressHandler(data: any) {
+		const { id, down, key, locationData } = data;
+		const ship = this.ships.find((ship) => ship.id === id);
+		if (ship == null) {
+			return;
+		}
+		const { x, y, rotation, vx, vy } = locationData;
+		ship.setPosition(x * this.width, y * this.height);
+		ship.setVelocity2(vx, vy);
+		ship.setRotation(rotation);
+		if (down) {
+			ship?.onKeydownEvent(key);
+		} else {
+			ship?.onKeyupEvent(key);
+		}
+	}
+
+	shipCreateHandler(data: any) {
+		for (const shipData of data.ships) {
+			const { position, speed, theta, moveEntity, id, color } = shipData;
+			const ship = new Ship(id);
+			CanvasEngine.addChild(ship);
+			ship.setPosition(
+				position[0] * this.width + moveEntity[0] * ship.graphic.width,
+				position[1] * this.height + moveEntity[1] * ship.graphic.height
+			);
+			ship.setColor(color);
+			ship.setAngle(theta);
+			ship.setRotation(theta);
+			ship.setVelocity(speed);
+			if (id === WebSocketClient.getClientId()) {
+				ship.addKeyPressListeners();
+			}
+			this.ships.push(ship);
+		}
+	}
+
 	shipHandler(data: any) {
 		const { action } = data;
 		if (action === "keypress") {
-			const { id, down, key } = data;
-			const ship = this.ships.find((ship) => ship.id === id);
-			if (down) {
-				ship?.onKeydownEvent(key);
-			} else {
-				ship?.onKeyupEvent(key);
-			}
+			this.shipKeyPressHandler(data);
 		} else if (action === "createShips") {
-			for (const shipData of data.ships) {
-				const { position, speed, theta, moveEntity, id, color } = shipData;
-				const ship = new Ship(id);
-				ship.setPosition(
-					position[0] * this.width + moveEntity[0] * ship.graphic.width,
-					position[1] * this.height + moveEntity[1] * ship.graphic.height
-				);
-				ship.setColor(color);
-				ship.setAngle(theta);
-				ship.setRotation(theta);
-				ship.setVelocity(speed);
-				if (id === WebSocketClient.getClientId()) {
-					ship.addKeyPressListeners();
-				}
-				this.ships.push(ship);
-				if (this.setLifeCB != null) {
-					this.setLifeCB(shipData);
-				}
-				CanvasEngine.addChild(ship);
+			this.shipCreateHandler(data);
+		} else if (action === "removeShip") {
+			const i = this.ships.findIndex((ship) => ship.id === data.id);
+			if (i === -1) {
+				return;
 			}
+			this.ships[i].explode();
+			this.ships[i].destroy();
+			this.ships.splice(i, 1);
 		}
 	}
 
@@ -220,6 +285,10 @@ export class ClientGameEngine {
 		} else if (type === "score") {
 			if (this.singleton.setScoreCB != null) {
 				this.singleton.setScoreCB(data);
+			}
+		} else if (type === "lives") {
+			if (this.singleton.setLifeCB != null) {
+				this.singleton.setLifeCB(data);
 			}
 		}
 	}
