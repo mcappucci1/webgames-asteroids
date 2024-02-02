@@ -104,7 +104,7 @@ export class Entity {
 	}
 
 	setScale(scale: number) {
-		this.graphic.scale.set(scale);
+		this.graphic.scale.set(scale * Entity.screenMultiplier);
 	}
 
 	setPosition(x: number, y: number) {
@@ -119,7 +119,7 @@ export class Entity {
 	}
 
 	setVelocity2(x: number, y: number) {
-		this.velocity = [x * Entity.screenMultiplier, y * Entity.screenMultiplier];
+		this.velocity = [x, y];
 	}
 
 	setVelocity(speed: number) {

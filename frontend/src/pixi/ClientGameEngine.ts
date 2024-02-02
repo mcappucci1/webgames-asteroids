@@ -50,10 +50,10 @@ export class ClientGameEngine {
 		CanvasEngine.removeTickerCB(ClientGameEngine.updateCB);
 	}
 
-	static addShot(theta: number, position: Array<number>, color: number) {
+	static addShot(speed: number, theta: number, position: Array<number>, color: number) {
 		const shot = new Shot(0);
 		shot.setAngle(theta);
-		shot.setVelocity(Shot.speed);
+		shot.setVelocity(speed);
 		shot.setPosition(position[0], position[1]);
 		shot.setColor(color);
 		ClientGameEngine.singleton.shots.push(shot);
@@ -134,7 +134,6 @@ export class ClientGameEngine {
 		this.moveEntityArray(this.asteroids, dt);
 		this.moveEntityArray(this.alienShips, dt);
 		this.moveEntityArray(this.alienShots, dt);
-		this.moveEntityArray(this.ships, dt, false);
 		this.moveEntityArray(this.shots, dt);
 		this.detectCollisionsForEntityArray(this.asteroids, [this.shots, this.alienShots]);
 		this.detectCollisionsForEntityArray(this.alienShips, [this.shots, this.asteroids]);
@@ -219,15 +218,11 @@ export class ClientGameEngine {
 	}
 
 	shipKeyPressHandler(data: any) {
-		const { id, down, key, locationData } = data;
+		const { id, down, key } = data;
 		const ship = this.ships.find((ship) => ship.id === id);
 		if (ship == null) {
 			return;
 		}
-		const { x, y, rotation, vx, vy } = locationData;
-		ship.setPosition(x * this.width, y * this.height);
-		ship.setVelocity2(vx, vy);
-		ship.setRotation(rotation);
 		if (down) {
 			ship?.onKeydownEvent(key);
 		} else {
@@ -237,7 +232,7 @@ export class ClientGameEngine {
 
 	shipCreateHandler(data: any) {
 		for (const shipData of data.ships) {
-			const { position, speed, theta, moveEntity, id, color } = shipData;
+			const { position, theta, moveEntity, id, color } = shipData;
 			const ship = new Ship(id);
 			CanvasEngine.addChild(ship);
 			ship.setPosition(
@@ -247,7 +242,6 @@ export class ClientGameEngine {
 			ship.setColor(color);
 			ship.setAngle(theta);
 			ship.setRotation(theta);
-			ship.setVelocity(speed);
 			if (id === WebSocketClient.getClientId()) {
 				ship.addKeyPressListeners();
 			}
@@ -269,6 +263,15 @@ export class ClientGameEngine {
 			this.ships[i].explode();
 			this.ships[i].destroy();
 			this.ships.splice(i, 1);
+		} else if (action === "updateShips") {
+			const { shipData } = data;
+			for (const ship of this.ships) {
+				const { x, y, rotation, vx, vy } = shipData[ship.id];
+				ship.setPosition(x * this.width, y * this.height);
+				ship.setVelocity2(vx * this.width, vy * this.height);
+				ship.setRotation(rotation);
+				console.log(Math.sqrt(Math.pow(vx * this.width, 2) + Math.pow(vy * this.height, 2)));
+			}
 		}
 	}
 

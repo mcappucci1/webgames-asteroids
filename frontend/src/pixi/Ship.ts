@@ -2,6 +2,7 @@ import { IPointData } from "pixi.js";
 import { Entity } from "./Entity";
 import { ClientGameEngine } from "./ClientGameEngine";
 import { WebSocketClient } from "../api/WebSocketClient";
+import { Shot } from "./Shot";
 
 const ship: Array<IPointData> = [
 	{ x: 0, y: 0 },
@@ -18,21 +19,8 @@ const shipMove: Array<IPointData> = [
 	{ x: 0, y: 6 },
 ];
 
-enum Direction {
-	None,
-	Left,
-	Right,
-	Both,
-}
-
 export class Ship extends Entity {
-	static mass: number = 1000;
-	static engineForce: number = 150;
-	static dragCoefficient: number = 3;
-	static maxSpeed: number = 7;
 	public indestructible: boolean = true;
-	private thrusting: boolean = false;
-	private direction: Direction = Direction.None;
 	private shootInterval: NodeJS.Timer | undefined;
 	private keyDownListener: (e: KeyboardEvent) => void;
 	private keyUpListener: (e: KeyboardEvent) => void;
@@ -44,16 +32,8 @@ export class Ship extends Entity {
 		setTimeout(() => (this.indestructible = false), 2000);
 	}
 
-	setVelocity(speed: number) {
-		super.setVelocity(speed);
-	}
-
 	onKeydownEvent(key: string) {
-		if (key === "ArrowRight") {
-			this.direction = this.direction === Direction.Left ? Direction.Both : Direction.Right;
-		} else if (key === "ArrowLeft") {
-			this.direction = this.direction === Direction.Right ? Direction.Both : Direction.Left;
-		} else if (key === "ArrowUp") {
+		if (key === "ArrowUp") {
 			this.enableThrust();
 		} else if (key === "s") {
 			this.startShoot();
@@ -61,11 +41,7 @@ export class Ship extends Entity {
 	}
 
 	onKeyupEvent(key: string) {
-		if (key === "ArrowRight") {
-			this.direction = this.direction === Direction.Both ? Direction.Left : Direction.None;
-		} else if (key === "ArrowLeft") {
-			this.direction = this.direction === Direction.Both ? Direction.Right : Direction.None;
-		} else if (key === "ArrowUp") {
+		if (key === "ArrowUp") {
 			this.disableThrust();
 		} else if (key === "s") {
 			this.endShoot();
@@ -73,7 +49,12 @@ export class Ship extends Entity {
 	}
 
 	createShot() {
-		ClientGameEngine.addShot(this.theta, [this.graphic.x, this.graphic.y], this.graphic.tint as number);
+		ClientGameEngine.addShot(
+			Shot.speed + this.getSpeed() * 20,
+			this.theta,
+			[this.graphic.x, this.graphic.y],
+			this.graphic.tint as number
+		);
 	}
 
 	startShoot() {
@@ -89,52 +70,12 @@ export class Ship extends Entity {
 		this.shootInterval = undefined;
 	}
 
-	thrust(delta: number) {
-		const a = Ship.engineForce / Ship.mass;
-		this.velocity[0] += a * delta * Math.cos(this.graphic.rotation) * Entity.screenMultiplier;
-		this.velocity[1] += a * delta * Math.sin(this.graphic.rotation) * Entity.screenMultiplier;
-	}
-
 	enableThrust() {
-		this.thrusting = true;
 		super.redraw(shipMove);
 	}
 
 	disableThrust() {
-		this.thrusting = false;
 		super.redraw(ship);
-	}
-
-	move(delta: number) {
-		if (this.direction === Direction.Left) {
-			this.rotateClockwiseBy(-0.075);
-		} else if (this.direction === Direction.Right) {
-			this.rotateClockwiseBy(0.075);
-		}
-
-		if (this.thrusting) {
-			this.thrust(delta);
-		}
-
-		const f = Ship.dragCoefficient * Math.abs(this.velocity[0]);
-		this.velocity[0] -= (f / Ship.mass) * delta * (this.velocity[0] < 0 ? -1 : 1);
-		const fy = Ship.dragCoefficient * Math.abs(this.velocity[1]);
-		this.velocity[1] -= (fy / Ship.mass) * delta * (this.velocity[1] < 0 ? -1 : 1);
-
-		super.move(delta);
-
-		const bounds = this.graphic.getBounds();
-		const [w, h] = ClientGameEngine.getSize();
-
-		if (bounds.right < 0) {
-			this.graphic.x = w + bounds.width / 4;
-		} else if (bounds.bottom < 0) {
-			this.graphic.y = h + bounds.height / 4;
-		} else if (bounds.left > w) {
-			this.graphic.x = -bounds.width / 4;
-		} else if (bounds.top > h) {
-			this.graphic.y = -bounds.height / 4;
-		}
 	}
 
 	sendMessage(key: string, repeat: boolean, down: boolean) {
@@ -146,15 +87,7 @@ export class Ship extends Entity {
 		if (invalidKey) {
 			return;
 		}
-		const [w, h] = ClientGameEngine.getSize();
-		const locationData = {
-			x: this.graphic.x / w,
-			y: this.graphic.y / h,
-			rotation: this.theta,
-			vx: this.velocity[0] / Entity.screenMultiplier,
-			vy: this.velocity[1] / Entity.screenMultiplier,
-		};
-		WebSocketClient.setShipKeyPress(down, key, this.id, locationData);
+		WebSocketClient.setShipKeyPress(down, key, this.id);
 	}
 
 	addKeyPressListeners() {
