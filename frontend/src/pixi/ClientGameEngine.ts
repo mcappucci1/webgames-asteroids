@@ -266,11 +266,12 @@ export class ClientGameEngine {
 		} else if (action === "updateShips") {
 			const { shipData } = data;
 			for (const ship of this.ships) {
-				const { x, y, rotation, vx, vy } = shipData[ship.id];
-				ship.setPosition(x * this.width, y * this.height);
-				ship.setVelocity2(vx * this.width, vy * this.height);
-				ship.setRotation(rotation);
-				console.log(Math.sqrt(Math.pow(vx * this.width, 2) + Math.pow(vy * this.height, 2)));
+				if (ship.id in shipData) {
+					const { x, y, rotation, vx, vy } = shipData[ship.id];
+					ship.setPosition(x * this.width, y * this.height);
+					ship.setVelocity2(vx * this.width, vy * this.height);
+					ship.setRotation(rotation);
+				}
 			}
 		}
 	}
