@@ -15,7 +15,7 @@ Users can create or join games of up to six players, then fly around destroying 
 
 ### Option 1: Raspberry Pi Deployment
 
-There is a Raspberry Pi hosted deployment of this project. Play the game by going to http://asteroidsgames.com:3000
+There is a Raspberry Pi hosted deployment of this project. Play the game by going to http://asteroidsgames.com
 
 ### Option 2: Local Setup
 
@@ -26,7 +26,7 @@ To run this project locally, do thse following:
 3. To run in docker containers...
     1. cd into `frontend` directory
     2. Run: `docker build --no-cache -f Dockerfile -t asteroids-frontend:latest .`
-    3. Run: `docker run -d -p 3000:3000 --name asteroids-frontend asteroids-frontend:latest`
+    3. Run: `docker run -d -p 80:80 --name asteroids-frontend asteroids-frontend:latest`
     4. Open a new terminal
     5. cd into `/webgames-asteroids/backend` directory
     6. Run: `docker build --no-cache -f Dockerfile -t asteroids-backend:latest .`
@@ -39,4 +39,4 @@ To run this project locally, do thse following:
     4. Open a new terminal
     5. cd into `/webgames-asteroids/backend` directory
     6. Run: `npm install`
-    7. Run: `npm test`
+    7. Run: `npm start`
