@@ -25,6 +25,10 @@ export class Game {
 	private gameStartTimeout: NodeJS.Timeout | undefined;
 	private gameInterval: NodeJS.Timeout | undefined;
 	private liveShips = 0;
+	private ships: Ship[] = [];
+	private lastUpdateTime: number = 0;
+	private shipLocationMessages: NodeJS.Timeout | undefined;
+	private shipUpdateInterval: NodeJS.Timeout | undefined;
 
 	constructor(name: string, controller: Controller) {
 		this.name = name;
@@ -32,9 +36,17 @@ export class Game {
 	}
 
 	shipHandler(data: any) {
-		for (const client of this.clients) {
-			client.sendMessage(true, undefined, MessageType.GAME_DATA, data);
+		const { down, key, id } = data.data;
+		const ship = this.ships.find((ship) => ship.id === id);
+		if (ship == null) {
+			return;
 		}
+		if (key === "s" || key === "ArrowUp") {
+			for (const client of this.clients) {
+				client.sendMessage(true, undefined, MessageType.GAME_DATA, data);
+			}
+		}
+		ship.keypress(key, down);
 	}
 
 	destroyAsteroidHandler(entity: any, data: any) {
@@ -56,6 +68,7 @@ export class Game {
 	}
 
 	destroyShipHandler(entity: any, id: any) {
+		this.ships = this.ships.filter((ship) => ship !== entity);
 		entity.lives -= 1;
 		const i = this.clients.findIndex((client) => client.getId() === id);
 		this.updateLives(entity.id, entity.lives, this.clients[i].color, entity.name!);
@@ -223,9 +236,12 @@ export class Game {
 	}
 
 	generateClientShip(client: Client, color: string, position: number[], lives = 3) {
+		const shipObj = new Ship(client.getId(), client.name!, this.clients, lives);
+		shipObj.setPosition(position[0], position[1]);
+		this.entityIds.set(client.getId(), shipObj);
 		const ship = {
 			id: client.getId(),
-			speed: 2,
+			speed: shipObj.getSpeed(),
 			lives: lives,
 			moveEntity: [0, 0.5],
 			color: color,
@@ -233,7 +249,7 @@ export class Game {
 			theta: (3 * Math.PI) / 2,
 			position: position,
 		};
-		this.entityIds.set(client.getId(), new Ship(client.getId(), client.name!, lives));
+		this.ships.push(shipObj);
 		return ship;
 	}
 
@@ -262,10 +278,10 @@ export class Game {
 	createGameInterval() {
 		this.gameInterval = setInterval(() => {
 			const makeFaster =
-				this.generateAsteroidInterval >= 500 && ++this.intervalCount * this.generateAsteroidInterval > 10_000;
+				this.generateAsteroidInterval >= 300 && ++this.intervalCount * this.generateAsteroidInterval > 10_000;
 			if (makeFaster) {
-				this.generateAsteroidInterval -= 250;
-				this.alienSpawnOdds += 0.01;
+				this.generateAsteroidInterval *= 0.8;
+				this.alienSpawnOdds += 0.015;
 				this.intervalCount = 0;
 				clearInterval(this.gameInterval);
 				this.createGameInterval();
@@ -294,10 +310,48 @@ export class Game {
 			client.sendMessage(true, undefined, MessageType.START_GAME, undefined);
 		}
 		this.gameStartTimeout = setTimeout(() => {
+			this.lastUpdateTime = Date.now();
+			this.shipLocationMessages = setInterval(() => {
+				const shipData: any = {};
+				for (const ship of this.ships) {
+					shipData[ship.id] = ship.getState();
+				}
+				const data = {
+					type: "ship",
+					data: {
+						action: "updateShips",
+						shipData,
+					},
+				};
+				const now = Date.now();
+				for (const ship of this.ships) {
+					ship.updatePosition(now - this.lastUpdateTime);
+				}
+				this.lastUpdateTime = now;
+				for (const client of this.clients) {
+					client.sendMessage(true, undefined, MessageType.GAME_DATA, data);
+				}
+			}, 10);
 			this.generateClientShips();
 			this.createGameInterval();
 			this.gameStartTimeout = undefined;
 		}, delayMs);
+	}
+
+	stopIntervals() {
+		if (this.gameStartTimeout != null) {
+			clearTimeout(this.gameStartTimeout);
+			this.gameStartTimeout = undefined;
+		}
+		if (this.gameInterval != null) {
+			clearInterval(this.gameInterval);
+		}
+		if (this.shipLocationMessages != null) {
+			clearInterval(this.shipLocationMessages);
+		}
+		if (this.shipUpdateInterval != null) {
+			clearInterval(this.shipUpdateInterval);
+		}
 	}
 
 	stop() {
@@ -313,13 +367,7 @@ export class Game {
 			}
 		}
 		this.started = false;
-		if (this.gameStartTimeout != null) {
-			clearTimeout(this.gameStartTimeout);
-			this.gameStartTimeout = undefined;
-		}
-		if (this.gameInterval != null) {
-			clearInterval(this.gameInterval);
-		}
+		this.stopIntervals();
 		for (const entity of this.entityIds.values()) {
 			if (entity instanceof AlienShip) {
 				entity.destroy();
@@ -328,13 +376,7 @@ export class Game {
 	}
 
 	destroy() {
-		if (this.gameStartTimeout != null) {
-			clearTimeout(this.gameStartTimeout);
-			this.gameStartTimeout = undefined;
-		}
-		if (this.gameInterval != null) {
-			clearInterval(this.gameInterval);
-		}
+		this.stopIntervals();
 		for (const client of this.clients) {
 			client.setGame(undefined);
 		}
